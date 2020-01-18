@@ -1,5 +1,7 @@
+CFLAGS += -Wall -Wpointer-arith -std=c99# -pedantic -pedantic-errors
+
 all:
-	gcc -std=c99 -o lemon lemon.c
+	gcc $(CFLAGS) -o lemon lemon.c
 
 clean:
 	rm -f lemon

@@ -1,13 +1,15 @@
+CFLAGS += -Wall -Wpointer-arith -std=c99 -pedantic# -pedantic-errors
 CC = gcc
-TARGET = libparse.so
 PARSE = parse
 CRC = crc
 
-all: $(TARGET) lib$(CRC).so
+all: $(PARSE).o lib$(PARSE).so $(CRC).o lib$(CRC).so
 
-libparse.so: $(PARSE).c
-	$(CC) -std=c99 -Wall -c -fPIC $(OPT) -o $(PARSE).o $(PARSE).c
-	$(CC) -shared -o $(TARGET) $(PARSE).o
+$(PARSE).o: $(PARSE).c
+	$(CC) $(CFLAGS) -c -o $(PARSE).o $(PARSE).c
+
+lib$(PARSE).so: $(PARSE).c
+	$(CC) $(CFLAGS) -fPIC -shared -o lib$(PARSE).so $(PARSE).c
 
 $(PARSE).c: lemon/lemon
 	lemon/lemon -p ./$(PARSE).y
@@ -15,10 +17,12 @@ $(PARSE).c: lemon/lemon
 lemon/lemon:
 	cd lemon ; $(MAKE) all
 
-libcrc.so: $(CRC).c
-	$(CC) -c -fPIC $(OPT) -o $(CRC).o $(CRC).c
-	$(CC) -shared -o lib$(CRC).so $(CRC).o
+$(CRC).o:
+	$(CC) $(CFLAGS) -c -o $(CRC).o $(CRC).c
+
+lib$(CRC).so: $(CRC).c
+	$(CC) $(CFLAGS) -fPIC -shared -o lib$(CRC).so $(CRC).c
 
 clean:
 	cd lemon ; $(MAKE) clean
-	rm -f $(PARSE).c $(TARGET) $(PARSE).h $(PARSE).out $(PARSE).o lib$(CRC).so $(CRC).o
+	rm -f $(PARSE).c lib$(PARSE).so $(PARSE).h $(PARSE).out $(PARSE).o lib$(CRC).so $(CRC).o
