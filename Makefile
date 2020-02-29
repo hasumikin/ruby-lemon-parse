@@ -1,4 +1,3 @@
-CFLAGS += -Wall -Wpointer-arith -std=c99 -pedantic# -pedantic-errors
 CC = gcc
 PARSE = parse
 CRC = crc
@@ -15,7 +14,7 @@ $(PARSE).c: lemon/lemon
 	lemon/lemon -p ./$(PARSE).y
 
 lemon/lemon:
-	cd lemon ; $(MAKE) all
+	cd lemon ; CFLAGS="$(CFLAGS)" $(MAKE) all
 
 $(CRC).o:
 	$(CC) $(CFLAGS) -c -o $(CRC).o $(CRC).c
