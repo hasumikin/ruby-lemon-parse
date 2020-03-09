@@ -1,3 +1,37 @@
+%fallback
+  ON_NONE
+  KW
+  ON_SP
+  SEMICOLON
+  PERIOD
+  ON_OP
+  ON_TSTRING_SINGLE
+  EMBDOC
+  EMBDOC_BEG
+  EMBDOC_END
+  EMBEXPR_BEG
+  EMBEXPR_END
+  IVAR
+  GVAR
+  CHAR
+  TLAMBDA
+  SYMBEG
+  COMMENT
+  LPAREN
+  RPAREN
+  LBRACKET
+  RBRACKET
+  LBRACE
+  RBRACE
+  WORDS_BEG
+  WORDS_SEP
+  QWORDS_BEG
+  SYMBOLS_BEG
+  QSYMBOLS_BEG
+  LABEL
+  FLOAT
+  .
+
 %token_type { char* }
 %default_type { node* }
 
@@ -7,7 +41,30 @@
   #include <string.h>
   #include "atom_type.h"
   #include "parse.h"
+}
 
+%ifdef LEMON_MMRBC
+  %include {
+    #ifdef MRBC_ALLOC_LIBC
+      #define LEMON_ALLOC(size) malloc(size)
+      #define LEMON_FREE(ptr)   free(ptr)
+    #else
+      void *ALLOC(unsigned int size);
+      void FREE(void *ptr);
+      #define LEMON_ALLOC(size) ALLOC(size)
+      #define LEMON_FREE(ptr)   FREE(ptr)
+    #endif /* MRBC_ALLOC_LIBC */
+  }
+%endif
+
+%ifndef LEMON_MMRBC
+  %include {
+    #define LEMON_ALLOC(size) malloc(size)
+    #define LEMON_FREE(ptr)   free(ptr)
+  }
+%endif
+
+%include {
   typedef enum {
     ATOM,
     CONS,
@@ -104,7 +161,7 @@
   static char*
   parser_strndup(parser_state *p, const char *s, size_t len)
   {
-    char *b = (char *)malloc(len+1);//TODO リテラルプールへ
+    char *b = (char *)LEMON_ALLOC(len+1);//TODO リテラルプールへ
     memcpy(b, s, len);
     b[len] = '\0';
     return b;
@@ -129,7 +186,7 @@
     //}
     //else {
     //  c = (node *)parser_palloc(p, sizeof(node));
-    c = (node *)malloc(sizeof(node));
+    c = (node *)LEMON_ALLOC(sizeof(node));
     if (c == NULL) printf("Out Of Memory");
     c->type = CONS;
     //}
@@ -149,7 +206,7 @@
   atom(int t)
   {
     node* a;
-    a = (node *)malloc(sizeof(node));
+    a = (node *)LEMON_ALLOC(sizeof(node));
     if (a == NULL) printf("Out Of Memory");
     a->type = ATOM;
     a->atom.type = t;
@@ -160,7 +217,7 @@
   literal(const char *s)
   {
     node* l;
-    l = (node *)malloc(sizeof(node));
+    l = (node *)LEMON_ALLOC(sizeof(node));
     if (l == NULL) printf("Out Of Memory");
     l->type = LITERAL;
     l->literal.name = strdup(s);
@@ -383,7 +440,7 @@ numeric(A) ::= INTEGER(B). { A = new_int(p, B, 10, 0); }
 
 string ::= string_fragment.
 //string ::= string string_fragment. { A = concat_string(p, B, C); }
-string_fragment(A) ::= STRING_BEG string_rep(C) STRING. { A = new_dstr(p, list3(atom(ATOM_string_add), list1(atom(ATOM_string_content)), C)); }
+string_fragment(A) ::= STRING_BEG string_rep(C) STRING_END. { A = new_dstr(p, list3(atom(ATOM_string_add), list1(atom(ATOM_string_content)), C)); }
 
 string_rep ::= string_interp.
 string_rep(A) ::= string_rep(B) string_interp(C). { A = append(B, C); }
@@ -429,10 +486,10 @@ none(A) ::= . { A = 0; }
       freeNode(p->cons.car);
       freeNode(p->cons.cdr);
     } else if (p->type == LITERAL) {
-      free(p->literal.name);
+      LEMON_FREE(p->literal.name);
     }
     // printf("free cons: %p\n", p);
-    free(p);
+    LEMON_FREE(p);
   }
 
   void freeAllNode(void) {
