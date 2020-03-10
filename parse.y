@@ -161,6 +161,7 @@
   ParserState *ParseInitState(void)
   {
     ParserState *p = LEMON_ALLOC(sizeof(ParserState));
+    p->root = LEMON_ALLOC(sizeof(node));
     return p;
   }
 
