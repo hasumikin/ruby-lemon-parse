@@ -51,10 +51,10 @@
       #define LEMON_ALLOC(size) malloc(size)
       #define LEMON_FREE(ptr)   free(ptr)
     #else
-      void *ALLOC(unsigned int size);
-      void FREE(void *ptr);
-      #define LEMON_ALLOC(size) ALLOC(size)
-      #define LEMON_FREE(ptr)   FREE(ptr)
+      void *mmrbc_alloc(size_t size);
+      void mmrbc_free(void *ptr);
+      #define LEMON_ALLOC(size) mmrbc_alloc(size)
+      #define LEMON_FREE(ptr)   mmrbc_free(ptr)
     #endif /* MRBC_ALLOC_LIBC */
   }
 %endif
@@ -508,6 +508,7 @@ none(A) ::= . { A = 0; }
 
   void ParseFreeState(yyParser *yyp) {
     LEMON_FREE(yyp->p);
+    LEMON_FREE(yyp);
   }
 
   void showNode1(node *n, Boolean isCar, int indent, Boolean isRightMost) {
