@@ -10,7 +10,7 @@ $(PARSE).o: $(PARSE).c
 lib$(PARSE).so: $(PARSE).c
 	$(CC) $(CFLAGS) $(LEMON_MACRO) -fPIC -shared -o lib$(PARSE).so $(PARSE).c
 
-$(PARSE).c: lemon/lemon
+$(PARSE).c: $(PARSE).y lemon/lemon
 	lemon/lemon -p $(LEMON_MACRO) ./$(PARSE).y
 
 lemon/lemon:
