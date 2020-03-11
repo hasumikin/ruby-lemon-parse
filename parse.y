@@ -499,14 +499,16 @@ none(A) ::= . { A = 0; }
     return p;
   }
 
+  void freeLiteralStore(LiteralStore *literal_store)
+  {
+    if (literal_store == NULL) return;
+    freeLiteralStore(literal_store->prev);
+    LEMON_FREE(literal_store->str);
+    LEMON_FREE(literal_store);
+  }
+
   void ParseFreeState(yyParser *yyp) {
-    LiteralStore *prev;
-    while (yyp->p->literal_store != NULL) {
-      prev = yyp->p->literal_store->prev;
-      LEMON_FREE(yyp->p->literal_store->str);
-      LEMON_FREE(yyp->p->literal_store);
-      yyp->p->literal_store = prev;
-    }
+    freeLiteralStore(yyp->p->literal_store);
     LEMON_FREE(yyp->p);
   }
 
