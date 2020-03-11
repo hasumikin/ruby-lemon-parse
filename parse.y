@@ -151,19 +151,20 @@
 //
 //  struct mrb_jmpbuf* jmp;
 //};
+
+  typedef struct literal_store
+  {
+    char *str;
+    struct literal_store *prev;
+  } LiteralStore;
+
   typedef struct parser_state {
     /* see mruby/include/mruby/compile.h */
     node *cells;
     node *locals;
     node *root;
+    LiteralStore *literal_store;
   } ParserState;
-
-  ParserState *ParseInitState(void)
-  {
-    ParserState *p = LEMON_ALLOC(sizeof(ParserState));
-    p->root = LEMON_ALLOC(sizeof(node));
-    return p;
-  }
 
   static char*
   parser_strndup(ParserState *p, const char *s, size_t len)
@@ -471,15 +472,15 @@ term ::= SEMICOLON.
 none(A) ::= . { A = 0; }
 
 %code {
-#ifndef Boolean         /* Boolean が定義されていなかったら */
-#define Boolean int
-#endif
-#ifndef TRUE            /* TRUE が定義されていなかったら */
-#define TRUE 1
-#endif
-#ifndef FALSE           /* FALSE が定義されていなかったら */
-#define FALSE 0
-#endif
+  #ifndef Boolean
+  #define Boolean int
+  #endif
+  #ifndef TRUE
+  #define TRUE 1
+  #endif
+  #ifndef FALSE
+  #define FALSE 0
+  #endif
 
   void *pointerToMalloc(void){
     return malloc;
@@ -489,7 +490,28 @@ none(A) ::= . { A = 0; }
     return free;
   }
 
+  ParserState *ParseInitState(void)
+  {
+    ParserState *p = LEMON_ALLOC(sizeof(ParserState));
+    p->literal_store = LEMON_ALLOC(sizeof(LiteralStore));
+    p->literal_store->str = NULL;
+    p->literal_store->prev = NULL;
+    return p;
+  }
+
+  void ParseFreeState(yyParser *yyp) {
+    LiteralStore *prev;
+    while (yyp->p->literal_store != NULL) {
+      prev = yyp->p->literal_store->prev;
+      LEMON_FREE(yyp->p->literal_store->str);
+      LEMON_FREE(yyp->p->literal_store);
+      yyp->p->literal_store = prev;
+    }
+    LEMON_FREE(yyp->p);
+  }
+
   void freeNode(node *n) {
+    //printf("before free cons: %p\n", n);
     if (n == NULL)
       return;
     if (n->type == CONS) {
@@ -498,7 +520,7 @@ none(A) ::= . { A = 0; }
     } else if (n->type == LITERAL) {
       LEMON_FREE(n->literal.name);
     }
-    // printf("free cons: %p\n", n);
+    //printf("after free cons: %p\n", n);
     LEMON_FREE(n);
   }
 
@@ -506,9 +528,13 @@ none(A) ::= . { A = 0; }
     freeNode(yyp->p->root);
   }
 
-  void ParseFreeState(yyParser *yyp) {
-    LEMON_FREE(yyp->p);
-    LEMON_FREE(yyp);
+  LiteralStore *ParsePushLiteralStore(ParserState *p, char *s)
+  {
+    LiteralStore *ls = LEMON_ALLOC(sizeof(LiteralStore));
+    ls->str = strdup(s);
+    ls->prev = p->literal_store;
+    p->literal_store = ls;
+    return ls;
   }
 
   void showNode1(node *n, Boolean isCar, int indent, Boolean isRightMost) {
