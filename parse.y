@@ -35,7 +35,7 @@
 %extra_context { ParserState *p }
 
 %token_type { char* }
-%default_type { node* }
+%default_type { Node* }
 
 %include {
   #include <stdlib.h>
@@ -73,7 +73,7 @@
     LITERAL
   } NodeType;
 
-  typedef struct node node;
+  typedef struct node Node;
 
   typedef struct {
     struct node *car;
@@ -86,14 +86,14 @@
 
   typedef struct {
     char *name;
-  } Literal;
+  } Value;
 
   struct node {
     NodeType type;
     union {
       Atom atom;
       Cons cons;
-      Literal literal;
+      Value value;
     };
   };
 
@@ -160,9 +160,9 @@
 
   typedef struct parser_state {
     /* see mruby/include/mruby/compile.h */
-    node *cells;
-    node *locals;
-    node *root;
+    Node *cells;
+    Node *locals;
+    Node *root;
     LiteralStore *literal_store;
   } ParserState;
 
@@ -185,17 +185,17 @@
   #undef strdup
   #define strdup(s) parser_strdup(p, s)
 
-  static node*
-  cons_gen(ParserState *p, node *car, node *cdr)
+  static Node*
+  cons_gen(ParserState *p, Node *car, Node *cdr)
   {
-    node *c;
+    Node *c;
     //if (p->cells) {
     //  c = p->cells;
     //  p->cells = p->cells->cdr;
     //}
     //else {
-    //  c = (node *)parser_palloc(p, sizeof(node));
-    c = (node *)LEMON_ALLOC(sizeof(node));
+    //  c = (Node *)parser_palloc(p, sizeof(Node));
+    c = (Node *)LEMON_ALLOC(sizeof(Node));
     if (c == NULL) printf("Out Of Memory");
     c->type = CONS;
     //}
@@ -211,75 +211,75 @@
   }
   #define cons(a,b) cons_gen(p,(a),(b))
 
-  static node*
+  static Node*
   atom(int t)
   {
-    node* a;
-    a = (node *)LEMON_ALLOC(sizeof(node));
+    Node* a;
+    a = (Node *)LEMON_ALLOC(sizeof(Node));
     if (a == NULL) printf("Out Of Memory");
     a->type = ATOM;
     a->atom.type = t;
     return a;
   }
 
-  static node*
+  static Node*
   literal_gen(ParserState *p, const char *s)
   {
-    node* l;
-    l = (node *)LEMON_ALLOC(sizeof(node));
+    Node* l;
+    l = (Node *)LEMON_ALLOC(sizeof(Node));
     if (l == NULL) printf("Out Of Memory");
     l->type = LITERAL;
-    l->literal.name = strdup(s);
+    l->value.name = strdup(s);
     return l;
   }
   #define literal(s) literal_gen(p, (s))
 
-  static node*
-  list1_gen(ParserState *p, node *a)
+  static Node*
+  list1_gen(ParserState *p, Node *a)
   {
     return cons(a, 0);
   }
   #define list1(a) list1_gen(p, (a))
 
-static node*
-list2_gen(ParserState *p, node *a, node *b)
+static Node*
+list2_gen(ParserState *p, Node *a, Node *b)
 {
   return cons(a, cons(b,0));
 }
 #define list2(a,b) list2_gen(p, (a),(b))
 
-static node*
-list3_gen(ParserState *p, node *a, node *b, node *c)
+static Node*
+list3_gen(ParserState *p, Node *a, Node *b, Node *c)
 {
   return cons(a, cons(b, cons(c,0)));
 }
 #define list3(a,b,c) list3_gen(p, (a),(b),(c))
 
-static node*
-list4_gen(ParserState *p, node *a, node *b, node *c, node *d)
+static Node*
+list4_gen(ParserState *p, Node *a, Node *b, Node *c, Node *d)
 {
   return cons(a, cons(b, cons(c, cons(d, 0))));
 }
 #define list4(a,b,c,d) list4_gen(p, (a),(b),(c),(d))
 
-static node*
-list5_gen(ParserState *p, node *a, node *b, node *c, node *d, node *e)
+static Node*
+list5_gen(ParserState *p, Node *a, Node *b, Node *c, Node *d, Node *e)
 {
   return cons(a, cons(b, cons(c, cons(d, cons(e, 0)))));
 }
 #define list5(a,b,c,d,e) list5_gen(p, (a),(b),(c),(d),(e))
 
-static node*
-list6_gen(ParserState *p, node *a, node *b, node *c, node *d, node *e, node *f)
+static Node*
+list6_gen(ParserState *p, Node *a, Node *b, Node *c, Node *d, Node *e, Node *f)
 {
   return cons(a, cons(b, cons(c, cons(d, cons(e, cons(f, 0))))));
 }
 #define list6(a,b,c,d,e,f) list6_gen(p, (a),(b),(c),(d),(e),(f))
 
-static node*
-append_gen(ParserState *p, node *a, node *b)
+static Node*
+append_gen(ParserState *p, Node *a, Node *b)
 {
-//  node *c = a;
+//  Node *c = a;
 //  if (!a) return b;
 //  while (c->cons.cdr) {
 //    c = c->cons.cdr;
@@ -293,12 +293,12 @@ append_gen(ParserState *p, node *a, node *b)
 #define append(a,b) append_gen(p,(a),(b))
 #define push(a,b) append_gen(p,(a),list1(b))
 
-  #define nsym(x) ((node*)(intptr_t)(x))
-  #define nint(x) ((node*)(intptr_t)(x))
+  #define nsym(x) ((Node*)(intptr_t)(x))
+  #define nint(x) ((Node*)(intptr_t)(x))
 
 /*
-  static node*
-  locals_node(ParserState *p)
+  static Node*
+  locals_Node(ParserState *p)
   {
     //return p->locals->cons.car;
     //return p->locals ? p->locals->cons.car : NULL;
@@ -306,20 +306,20 @@ append_gen(ParserState *p, node *a, node *b)
 */
   /* (:scope (vars..) (prog...)) */
 /*
-  static node*
-  new_scope(ParserState *p, node *body)
+  static Node*
+  new_scope(ParserState *p, Node *body)
   {
     return cons(atom(ATOM_stmts_add), cons(locals_node(p), body));
   }
 */
 
   /* (:call a b c) */
-  static node*
-  new_call(ParserState *p, node *a, int b, node *c, int pass)
+  static Node*
+  new_call(ParserState *p, Node *a, int b, Node *c, int pass)
   {
     //void_expr_error(p, a);
     //NODE_LINENO(n, a);
-    node *n;
+    Node *n;
     switch (b) {
       case PLUS:
         n = list4(atom(ATOM_binary), a, literal(":+"), c);
@@ -332,11 +332,11 @@ append_gen(ParserState *p, node *a, node *b)
   }
 
   /* (:begin prog...) */
-  static node*
-  new_begin(ParserState *p, node *body)
+  static Node*
+  new_begin(ParserState *p, Node *body)
   {
     if (body) {
-      node *add;//, *new;
+      Node *add;//, *new;
       //add = list1(atom(":stmts_add"));
       //new = list2(atom(":stmts_new"), body);
       //add->cons.cdr = new;
@@ -348,53 +348,53 @@ append_gen(ParserState *p, node *a, node *b)
 
   #define newline_node(n) (n)
 
-  static node*
-  call_bin_op_gen(ParserState *p, node *recv, int m, node *arg1)
+  static Node*
+  call_bin_op_gen(ParserState *p, Node *recv, int m, Node *arg1)
   {
-    //node *n = new_call(p, recv, m, list1(list1(arg1)), 1);
-    node *n = new_call(p, recv, m, arg1, 1);
+    //Node *n = new_call(p, recv, m, list1(list1(arg1)), 1);
+    Node *n = new_call(p, recv, m, arg1, 1);
     return n;
   }
   #define call_bin_op(a, m, b) call_bin_op_gen(p ,(a), (m), (b))
 
   /* (:int . i) */
-  static node*
+  static Node*
   new_int(ParserState *p, const char *s, int base, int suffix)
   { // base は10進法などを表す
-    //node* result = list3((node*)NODE_INT, (node*)strdup(s), nint(base));
-    node* result = list2(atom(ATOM_at_int), literal(s));
+    //Node* result = list3((Node*)NODE_INT, (Node*)strdup(s), nint(base));
+    Node* result = list2(atom(ATOM_at_int), literal(s));
     return result;
   }
 
   /* (:self) */
-  static node*
+  static Node*
   new_self(ParserState *p)
   {
     return list1(atom(ATOM_self));
   }
 
   /* (:fcall self mid args) */
-  static node*
-  new_fcall(ParserState *p, node *b, node *c)
+  static Node*
+  new_fcall(ParserState *p, Node *b, Node *c)
   {
-    //node *n = new_self(p);
-    node *n = list3(atom(ATOM_command), b, c);
+    //Node *n = new_self(p);
+    Node *n = list3(atom(ATOM_command), b, c);
     return n;
   }
 
   /* (:block_arg . a) */
-  static node*
-  new_block_arg(ParserState *p, node *a)
+  static Node*
+  new_block_arg(ParserState *p, Node *a)
   {
-    return cons((node*)NODE_BLOCK_ARG, a);
+    return cons((Node*)NODE_BLOCK_ARG, a);
   }
 
   /* (:dstr . a) */
-  static node*
-  new_dstr(ParserState *p, node *a)
+  static Node*
+  new_dstr(ParserState *p, Node *a)
   {
     return list2(atom(ATOM_string_literal), a);
-    //return cons((node*)NODE_DSTR, a);
+    //return cons((Node*)NODE_DSTR, a);
   }
 }
 
@@ -411,7 +411,7 @@ append_gen(ParserState *p, node *a, node *b)
 
 program ::= top_compstmt(B).   {
 //  if (!p->locals) p->locals = cons(atom(":program"),0);
-  //if (!p->locals) {node *a = cons(atom(":program"),0);}
+  //if (!p->locals) {Node *a = cons(atom(":program"),0);}
   yypParser->p->root = list2(atom(ATOM_program), B); }
 top_compstmt(A) ::= top_stmts(B) opt_terms. { A = B; }
 top_stmts(A) ::= none. { A = new_begin(p, 0); }
@@ -512,7 +512,7 @@ none(A) ::= . { A = 0; }
     LEMON_FREE(yyp->p);
   }
 
-  void freeNode(node *n) {
+  void freeNode(Node *n) {
     //printf("before free cons: %p\n", n);
     if (n == NULL)
       return;
@@ -520,7 +520,7 @@ none(A) ::= . { A = 0; }
       freeNode(n->cons.car);
       freeNode(n->cons.cdr);
     } else if (n->type == LITERAL) {
-      LEMON_FREE(n->literal.name);
+      LEMON_FREE(n->value.name);
     }
     //printf("after free cons: %p\n", n);
     LEMON_FREE(n);
@@ -539,7 +539,7 @@ none(A) ::= . { A = 0; }
     return ls;
   }
 
-  void showNode1(node *n, Boolean isCar, int indent, Boolean isRightMost) {
+  void showNode1(Node *n, Boolean isCar, int indent, Boolean isRightMost) {
     if (n == NULL) return;
     switch (n->type) {
       case CONS:
@@ -563,7 +563,7 @@ none(A) ::= . { A = 0; }
         }
         break;
       case LITERAL:
-        printf("\"%s\"", n->literal.name);
+        printf("\"%s\"", n->value.name);
         if (isRightMost) {
           printf("]");
         }
@@ -575,7 +575,7 @@ none(A) ::= . { A = 0; }
     }
   }
 
-  void showNode2(node *n) {
+  void showNode2(Node *n) {
     if (n == NULL) return;
     switch (n->type) {
       case ATOM:
@@ -584,7 +584,7 @@ none(A) ::= . { A = 0; }
         break;
       case LITERAL:
         printf("    literal:%p", n);
-        printf("  name:\"%s\"\n", n->literal.name);
+        printf("  name:\"%s\"\n", n->value.name);
         break;
       case CONS:
         printf("cons:%p\n", n);
@@ -608,7 +608,7 @@ none(A) ::= . { A = 0; }
     return yyp->p->root;
   }
 
-  Boolean hasCar(node *n) {
+  Boolean hasCar(Node *n) {
     if (n->type != CONS)
       return FALSE;
     if (n->cons.car) {
@@ -617,7 +617,7 @@ none(A) ::= . { A = 0; }
     return FALSE;
   }
 
-  Boolean hasCdr(node *n) {
+  Boolean hasCdr(Node *n) {
     if (n->type != CONS)
       return FALSE;
     if (n->cons.cdr) {
@@ -626,7 +626,7 @@ none(A) ::= . { A = 0; }
     return FALSE;
   }
 
-  char *kind(node *n){
+  char *kind(Node *n){
     char *type;
     switch (n->type) {
       case ATOM:
@@ -642,22 +642,22 @@ none(A) ::= . { A = 0; }
     return type;
   }
 
-  int atom_type(node *n) {
+  int atom_type(Node *n) {
     if (n->type != ATOM) {
       return 0;
     }
     return n->atom.type;
   }
 
-  void *pointerToLiteral(node *n) {
-    return n->literal.name;
+  void *pointerToLiteral(Node *n) {
+    return n->value.name;
   }
 
-  void *pointerToCar(node *n){
+  void *pointerToCar(Node *n){
     return n->cons.car;
   }
 
-  void *pointerToCdr(node *n){
+  void *pointerToCdr(Node *n){
     return n->cons.cdr;
   }
 
