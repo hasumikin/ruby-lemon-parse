@@ -41,7 +41,7 @@
   #include <stdlib.h>
   #include <stdint.h>
   #include <string.h>
-  #include "atom_type.h"
+  #include "parse_header.h"
   #include "parse.h"
 }
 
@@ -67,36 +67,7 @@
 %endif
 
 %include {
-  typedef enum {
-    ATOM,
-    CONS,
-    LITERAL
-  } NodeType;
-
-  typedef struct node Node;
-
-  typedef struct {
-    struct node *car;
-    struct node *cdr;
-  } Cons;
-
-  typedef struct {
-    int type;
-  } Atom;
-
-  typedef struct {
-    char *name;
-  } Value;
-
-  struct node {
-    NodeType type;
-    union {
-      Atom atom;
-      Cons cons;
-      Value value;
-    };
-  };
-
+  #include "parse_header.h"
 ///* parser structure */
 //struct mrb_parser_state {
 //  mrb_state *mrb;
@@ -151,20 +122,6 @@
 //
 //  struct mrb_jmpbuf* jmp;
 //};
-
-  typedef struct literal_store
-  {
-    char *str;
-    struct literal_store *prev;
-  } LiteralStore;
-
-  typedef struct parser_state {
-    /* see mruby/include/mruby/compile.h */
-    Node *cells;
-    Node *locals;
-    Node *root;
-    LiteralStore *literal_store;
-  } ParserState;
 
   static char*
   parser_strndup(ParserState *p, const char *s, size_t len)
@@ -472,16 +429,6 @@ term ::= SEMICOLON.
 none(A) ::= . { A = 0; }
 
 %code {
-  #ifndef Boolean
-  #define Boolean int
-  #endif
-  #ifndef TRUE
-  #define TRUE 1
-  #endif
-  #ifndef FALSE
-  #define FALSE 0
-  #endif
-
   void *pointerToMalloc(void){
     return malloc;
   }
@@ -539,7 +486,7 @@ none(A) ::= . { A = 0; }
     return ls;
   }
 
-  void showNode1(Node *n, Boolean isCar, int indent, Boolean isRightMost) {
+  void showNode1(Node *n, bool isCar, int indent, bool isRightMost) {
     if (n == NULL) return;
     switch (n->type) {
       case CONS:
@@ -553,7 +500,7 @@ none(A) ::= . { A = 0; }
           printf(", ");
         }
         if (n->cons.car && n->cons.car->type != CONS && n->cons.cdr == NULL) {
-          isRightMost = TRUE;
+          isRightMost = true;
         }
         break;
       case ATOM:
@@ -570,8 +517,8 @@ none(A) ::= . { A = 0; }
         break;
     }
     if (n->type == CONS) {
-      showNode1(n->cons.car, TRUE, indent+1, isRightMost);
-      showNode1(n->cons.cdr, FALSE, indent, isRightMost);
+      showNode1(n->cons.car, true, indent+1, isRightMost);
+      showNode1(n->cons.cdr, false, indent, isRightMost);
     }
   }
 
@@ -597,7 +544,7 @@ none(A) ::= . { A = 0; }
 
   void ParseShowAllNode(yyParser *yyp, int way) {
     if (way == 1) {
-      showNode1(yyp->p->root, TRUE, 0, FALSE);
+      showNode1(yyp->p->root, true, 0, false);
     } else if (way == 2) {
       showNode2(yyp->p->root);
     }
@@ -608,22 +555,22 @@ none(A) ::= . { A = 0; }
     return yyp->p->root;
   }
 
-  Boolean hasCar(Node *n) {
+  bool hasCar(Node *n) {
     if (n->type != CONS)
-      return FALSE;
+      return false;
     if (n->cons.car) {
-      return TRUE;
+      return true;
     }
-    return FALSE;
+    return false;
   }
 
-  Boolean hasCdr(Node *n) {
+  bool hasCdr(Node *n) {
     if (n->type != CONS)
-      return FALSE;
+      return false;
     if (n->cons.cdr) {
-      return TRUE;
+      return true;
     }
-    return FALSE;
+    return false;
   }
 
   char *kind(Node *n){
@@ -644,7 +591,7 @@ none(A) ::= . { A = 0; }
 
   int atom_type(Node *n) {
     if (n->type != ATOM) {
-      return 0;
+      return ATOM_NONE;
     }
     return n->atom.type;
   }
