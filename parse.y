@@ -454,9 +454,9 @@ none(A) ::= . { A = 0; }
     LEMON_FREE(literal_store);
   }
 
-  void ParseFreeState(yyParser *yyp) {
-    freeLiteralStore(yyp->p->literal_store);
-    LEMON_FREE(yyp->p);
+  void ParserStateFree(ParserState *p) {
+    freeLiteralStore(p->literal_store);
+    LEMON_FREE(p);
   }
 
   void freeNode(Node *n) {
