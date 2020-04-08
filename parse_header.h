@@ -67,6 +67,7 @@ typedef struct parser_state {
   Node *locals;
   Node *root;
   LiteralStore *literal_store;
+  int error_count;
 } ParserState;
 
 bool hasCar(Node *n);
