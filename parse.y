@@ -355,9 +355,23 @@ append_gen(ParserState *p, Node *a, Node *b)
   }
 }
 
-%parse_accept { printf("Parse has completed successfully.\n"); }
-%syntax_error { fprintf(stderr, "Syntax error\n"); exit(1); }
-%parse_failure { fprintf(stderr, "Parse failure\n"); exit(1); }
+%parse_accept {
+#ifndef NDEBUG
+  printf("Parse has completed successfully.\n");
+#endif
+}
+%syntax_error {
+#ifndef NDEBUG
+  fprintf(stderr, "Syntax error\n");
+#endif
+  p->error_count++;
+}
+%parse_failure {
+#ifndef NDEBUG
+  fprintf(stderr, "Parse failure\n");
+#endif
+  p->error_count++;
+}
 
 %start_symbol program
 
@@ -443,6 +457,7 @@ none(A) ::= . { A = 0; }
     p->literal_store = LEMON_ALLOC(sizeof(LiteralStore));
     p->literal_store->str = NULL;
     p->literal_store->prev = NULL;
+    p->error_count = 0;
     return p;
   }
 
