@@ -501,6 +501,7 @@ none(A) ::= . { A = 0; }
     return ls;
   }
 
+#ifndef NDEBUG
   void showNode1(Node *n, bool isCar, int indent, bool isRightMost) {
     if (n == NULL) return;
     switch (n->type) {
@@ -519,13 +520,13 @@ none(A) ::= . { A = 0; }
         }
         break;
       case ATOM:
-        printf("%d", n->atom.type);
+        printf("%s", atom_name(n->atom.type));
         if (isRightMost) {
           printf("]");
         }
         break;
       case LITERAL:
-        printf("\"%s\"", n->value.name);
+        printf("\e[31;1m\"%s\"\e[m", n->value.name);
         if (isRightMost) {
           printf("]");
         }
@@ -565,6 +566,7 @@ none(A) ::= . { A = 0; }
     }
     printf("\n");
   }
+#endif /* !NDEBUG */
 
   void *pointerToRoot(yyParser *yyp){
     return yyp->p->root;
