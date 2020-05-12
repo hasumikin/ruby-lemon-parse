@@ -11,7 +11,7 @@ def generate_token_helper
       f.each_line do |line|
         data = line.match(/\A#define\s+(\w+)\s+\d+$/)
         if data
-          file.puts "    case(#{data[1]}): return \"#{data[1]}\";"
+          file.puts "    case(#{data[1]}): return \"#{data[1].ljust(12)}\";"
         end
       end
     end
