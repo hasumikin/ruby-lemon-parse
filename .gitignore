@@ -5,3 +5,4 @@ parse.o
 parse.out
 libcrc.so
 crc.o
+*_helper.h

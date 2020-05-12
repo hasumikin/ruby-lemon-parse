@@ -2,11 +2,17 @@ CC := gcc
 PARSE := parse
 CRC := crc
 
-all: $(PARSE).o $(CRC).o
+all: $(PARSE).o $(CRC).o token_helper.h
+
+atom_helper.h:
+	./helper_gen.rb atom
+
+token_helper.h: parse.h parse_header.h
+	./helper_gen.rb token
 
 build_so: lib$(PARSE).so lib$(CRC).so
 
-$(PARSE).o: $(PARSE).c
+$(PARSE).o: $(PARSE).c atom_helper.h 
 	$(CC) $(CFLAGS) $(LEMON_MACRO) $(LDFLAGS) -c -o $(PARSE).o $(PARSE).c
 
 lib$(PARSE).so: $(PARSE).c
@@ -26,4 +32,5 @@ lib$(CRC).so: $(CRC).c
 
 clean:
 	cd lemon ; $(MAKE) clean
-	rm -f $(PARSE).c lib$(PARSE).so $(PARSE).h $(PARSE).out $(PARSE).o lib$(CRC).so $(CRC).o
+	rm -f $(PARSE).c lib$(PARSE).so $(PARSE).h $(PARSE).out $(PARSE).o lib$(CRC).so $(CRC).o \
+	  helper.h
