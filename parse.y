@@ -43,6 +43,7 @@
   #include <string.h>
   #include "parse_header.h"
   #include "parse.h"
+  #include "atom_helper.h"
 }
 
 %ifdef LEMON_MMRBC
