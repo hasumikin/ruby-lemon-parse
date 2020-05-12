@@ -4,10 +4,10 @@ CRC := crc
 
 all: $(PARSE).o $(CRC).o token_helper.h
 
-atom_helper.h:
+atom_helper.h: parse_header.h
 	./helper_gen.rb atom
 
-token_helper.h: parse.h parse_header.h
+token_helper.h: parse.h
 	./helper_gen.rb token
 
 build_so: lib$(PARSE).so lib$(CRC).so
@@ -33,4 +33,4 @@ lib$(CRC).so: $(CRC).c
 clean:
 	cd lemon ; $(MAKE) clean
 	rm -f $(PARSE).c lib$(PARSE).so $(PARSE).h $(PARSE).out $(PARSE).o lib$(CRC).so $(CRC).o \
-	  helper.h
+	  *_helper.h
