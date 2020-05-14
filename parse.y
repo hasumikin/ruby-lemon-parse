@@ -318,9 +318,16 @@ append_gen(ParserState *p, Node *a, Node *b)
   /* (:int . i) */
   static Node*
   new_int(ParserState *p, const char *s, int base, int suffix)
-  { // base は10進法などを表す
-    //Node* result = list3((Node*)NODE_INT, (Node*)strdup(s), nint(base));
+  { // TODO base は10進法などを表す
     Node* result = list2(atom(ATOM_at_int), literal(s));
+    return result;
+  }
+
+  /* nageted integer */
+  static Node*
+  new_negint(ParserState *p, const char *s, int base, int suffix)
+  {
+    Node* result = list3(atom(ATOM_unary), literal("-") ,list2(atom(ATOM_at_int), literal(s)));
     return result;
   }
 
@@ -420,6 +427,7 @@ primary ::= literal.
 primary ::= string.
 literal ::= numeric.
 numeric(A) ::= INTEGER(B). { A = new_int(p, B, 10, 0); }
+numeric(A) ::= UMINUS_NUM INTEGER(B). { A = new_negint(p, B, 10, 0); }
 
 string ::= string_fragment.
 //string ::= string string_fragment. { A = concat_string(p, B, C); }
