@@ -425,7 +425,10 @@ arg(A) ::= arg(B) DIVIDE arg(C). { A = call_bin_op(B, DIVIDE, C); }
 arg ::= primary.
 primary ::= literal.
 primary ::= string.
+primary(A) ::= LPAREN_ARG stmt(B) RPAREN. { A = B; }
+
 literal ::= numeric.
+
 numeric(A) ::= INTEGER(B). { A = new_lit(p, B, ATOM_at_int, 10, 0); }
 numeric(A) ::= FLOAT(B).   { A = new_lit(p, B, ATOM_at_float, 10, 0); }
 numeric(A) ::= UMINUS_NUM INTEGER(B). { A = new_neglit(p, B, ATOM_at_int, 10, 0); }
