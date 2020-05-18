@@ -339,6 +339,18 @@ append_gen(ParserState *p, Node *a, Node *b)
     return result;
   }
 
+  static Node*
+  new_lvar(ParserState *p, const char *s)
+  {
+    return list2(atom(ATOM_var_field), list2(atom(ATOM_at_ident), literal(s)));
+  }
+
+  static Node*
+  new_asgn(ParserState *p, Node *lhs, Node *rhs)
+  {
+    return list3(atom(ATOM_assign), lhs, rhs);
+  }
+
   /* (:self) */
   static Node*
   new_self(ParserState *p)
@@ -408,7 +420,9 @@ top_stmts(A) ::= top_stmts(B) terms top_stmt(C). {
   }
 top_stmt ::= stmt.
 //stmts(A) ::= stmt(B). { A = new_begin(B); }
+
 stmt ::= expr.
+
 expr ::= command_call.
 expr ::= arg.
 
@@ -426,11 +440,19 @@ opt_block_arg(A) ::= none. { A = 0; }
 
 args(A) ::= arg(B). { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), B); }
 
-arg(A) ::= arg(B) PLUS arg(C).   { A = call_bin_op(B, PLUS ,C); }
-arg(A) ::= arg(B) MINUS arg(C).  { A = call_bin_op(B, MINUS, C); }
-arg(A) ::= arg(B) TIMES arg(C).  { A = call_bin_op(B, TIMES, C); }
-arg(A) ::= arg(B) DIVIDE arg(C). { A = call_bin_op(B, DIVIDE, C); }
+arg(A) ::= lhs(B) E arg_rhs(C). { A = new_asgn(p, B, C); }
+//arg(A) ::= arg(B) PLUS arg(C).   { A = call_bin_op(B, PLUS ,C); }
+//arg(A) ::= arg(B) MINUS arg(C).  { A = call_bin_op(B, MINUS, C); }
+//arg(A) ::= arg(B) TIMES arg(C).  { A = call_bin_op(B, TIMES, C); }
+//arg(A) ::= arg(B) DIVIDE arg(C). { A = call_bin_op(B, DIVIDE, C); }
 arg ::= primary.
+
+arg_rhs ::= arg.
+
+lhs ::= variable.
+
+variable(A) ::= IDENTIFIER(B). { A = new_lvar(p, B); }
+
 primary ::= literal.
 primary ::= string.
 primary(A) ::= LPAREN_ARG stmt(B) RPAREN. { A = B; }

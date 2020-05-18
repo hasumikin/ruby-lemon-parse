@@ -7,6 +7,8 @@ typedef enum atom_type {
   ATOM_NONE = 0,
   ATOM_program = 1,
   ATOM_command,
+  ATOM_assign,
+  ATOM_var_field,
   ATOM_string_add,
   ATOM_string_content,
   ATOM_args_new,
