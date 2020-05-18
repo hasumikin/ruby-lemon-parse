@@ -17,6 +17,7 @@ typedef enum atom_type {
   ATOM_at_float,
   ATOM_stmts_add,
   ATOM_string_literal,
+  ATOM_symbol_literal,
   ATOM_binary,
   ATOM_unary,
   ATOM_stmts_new,

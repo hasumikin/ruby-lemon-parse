@@ -315,6 +315,14 @@ append_gen(ParserState *p, Node *a, Node *b)
   }
   #define call_bin_op(a, m, b) call_bin_op_gen(p ,(a), (m), (b))
 
+  /* (:sym) */
+  static Node*
+  new_sym(ParserState *p, const char *s)
+  {
+    Node* result = list2(atom(ATOM_symbol_literal), literal(s));
+    return result;
+  }
+
   /* (:int . i) */
   static Node*
   new_lit(ParserState *p, const char *s, AtomType a, int base, int suffix)
@@ -428,11 +436,22 @@ primary ::= string.
 primary(A) ::= LPAREN_ARG stmt(B) RPAREN. { A = B; }
 
 literal ::= numeric.
+literal ::= symbol.
 
 numeric(A) ::= INTEGER(B). { A = new_lit(p, B, ATOM_at_int, 10, 0); }
 numeric(A) ::= FLOAT(B).   { A = new_lit(p, B, ATOM_at_float, 10, 0); }
 numeric(A) ::= UMINUS_NUM INTEGER(B). { A = new_neglit(p, B, ATOM_at_int, 10, 0); }
 numeric(A) ::= UMINUS_NUM FLOAT(B).   { A = new_neglit(p, B, ATOM_at_float, 10, 0); }
+
+symbol(A) ::= basic_symbol(B). { A = new_sym(p, B); }
+
+basic_symbol(A) ::= SYMBEG sym(B). { A = B; }
+
+sym ::= fname.
+
+fname ::= IDENTIFIER.
+fname ::= CONSTANT.
+fname ::= FID.
 
 string ::= string_fragment.
 //string ::= string string_fragment. { A = concat_string(p, B, C); }
