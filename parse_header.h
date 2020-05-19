@@ -6,6 +6,9 @@
 typedef enum atom_type {
   ATOM_NONE = 0,
   ATOM_program = 1,
+  ATOM_method_add_arg,
+  ATOM_fcall,
+  ATOM_vcall,
   ATOM_command,
   ATOM_assign,
   ATOM_var_field,

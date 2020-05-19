@@ -363,7 +363,7 @@ append_gen(ParserState *p, Node *a, Node *b)
   new_fcall(ParserState *p, Node *b, Node *c)
   {
     //Node *n = new_self(p);
-    Node *n = list3(atom(ATOM_command), b, c);
+    Node *n = list3(atom(ATOM_fcall), b, c);
     return n;
   }
 
@@ -455,10 +455,13 @@ variable(A) ::= IDENTIFIER(B). { A = new_lvar(p, B); }
 
 primary ::= literal.
 primary ::= string.
+primary ::= var_ref.
 primary(A) ::= LPAREN_ARG stmt(B) RPAREN. { A = B; }
 
 literal ::= numeric.
 literal ::= symbol.
+
+var_ref ::= variable.
 
 numeric(A) ::= INTEGER(B). { A = new_lit(p, B, ATOM_at_int, 10, 0); }
 numeric(A) ::= FLOAT(B).   { A = new_lit(p, B, ATOM_at_float, 10, 0); }
