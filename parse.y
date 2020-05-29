@@ -346,6 +346,24 @@ append_gen(ParserState *p, Node *a, Node *b)
   }
 
   static Node*
+  new_ivar(ParserState *p, const char *s)
+  {
+    return list2(atom(ATOM_var_field), list2(atom(ATOM_at_ivar), literal(s)));
+  }
+
+  static Node*
+  new_gvar(ParserState *p, const char *s)
+  {
+    return list2(atom(ATOM_var_field), list2(atom(ATOM_at_gvar), literal(s)));
+  }
+
+  static Node*
+  new_const(ParserState *p, const char *s)
+  {
+    return list2(atom(ATOM_var_field), list2(atom(ATOM_at_const), literal(s)));
+  }
+
+  static Node*
   new_asgn(ParserState *p, Node *lhs, Node *rhs)
   {
     return list3(atom(ATOM_assign), lhs, rhs);
@@ -452,6 +470,9 @@ arg_rhs ::= arg.
 lhs ::= variable.
 
 variable(A) ::= IDENTIFIER(B). { A = new_lvar(p, B); }
+variable(A) ::= IVAR(B).       { A = new_ivar(p, B); }
+variable(A) ::= GVAR(B).       { A = new_gvar(p, B); }
+variable(A) ::= CONSTANT(B).   { A = new_const(p, B); }
 
 primary ::= literal.
 primary ::= string.

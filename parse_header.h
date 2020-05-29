@@ -27,6 +27,9 @@ typedef enum atom_type {
   ATOM_unary,
   ATOM_stmts_new,
   ATOM_at_ident,
+  ATOM_at_ivar,
+  ATOM_at_gvar,
+  ATOM_at_const,
   ATOM_at_tstring_content,
   NODE_BLOCK_ARG
 } AtomType;
