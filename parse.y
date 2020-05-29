@@ -246,7 +246,7 @@ append_gen(ParserState *p, Node *a, Node *b)
 //    c->cons.cdr = b;
 //  }
 //  return a;
-  return list3(atom(ATOM_stmts_add), a, b);
+  return list3(atom(ATOM_args_add), a, b);
 }
 #define append(a,b) append_gen(p,(a),(b))
 #define push(a,b) append_gen(p,(a),list1(b))
@@ -457,6 +457,7 @@ opt_block_arg(A) ::= COMMA block_arg(B). { A = B; }
 opt_block_arg(A) ::= none. { A = 0; }
 
 args(A) ::= arg(B). { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), B); }
+args(A) ::= args(B) COMMA arg(C). { A = append(B, C); }
 
 arg(A) ::= lhs(B) E arg_rhs(C). { A = new_asgn(p, B, C); }
 //arg(A) ::= arg(B) PLUS arg(C).   { A = call_bin_op(B, PLUS ,C); }
@@ -478,6 +479,14 @@ primary ::= literal.
 primary ::= string.
 primary ::= var_ref.
 primary(A) ::= LPAREN_ARG stmt(B) RPAREN. { A = B; }
+primary ::= method_call.
+
+method_call(A) ::= operation(B) paren_args(C). { A = new_fcall(p, B, C); }
+
+paren_args(A) ::= LPAREN opt_call_args(B) RPAREN. { A = B; }
+
+opt_call_args ::= none.
+opt_call_args ::= call_args opt_terms.
 
 literal ::= numeric.
 literal ::= symbol.
