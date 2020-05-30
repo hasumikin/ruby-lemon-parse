@@ -271,21 +271,27 @@ append_gen(ParserState *p, Node *a, Node *b)
   }
 */
 
+  /* (:sym) */
+  static Node*
+  new_sym(ParserState *p, const char *s)
+  {
+    Node* result = list2(atom(ATOM_symbol_literal), literal(s));
+    return result;
+  }
+
   /* (:call a b c) */
   static Node*
-  new_call(ParserState *p, Node *a, int b, Node *c, int pass)
+  new_call(ParserState *p, Node *a, const char* b, Node *c, int pass)
   {
-    //void_expr_error(p, a);
-    //NODE_LINENO(n, a);
-    Node *n;
-    switch (b) {
-      case PLUS:
-        n = list4(atom(ATOM_binary), a, literal(":+"), c);
-        break;
-      case TIMES:
-        n = list4(atom(ATOM_binary), a, literal(":*"), c);
-        break;
-    }
+    Node *n = list4(atom(pass ? ATOM_call : ATOM_scall), a, list2(atom(ATOM_at_ident), literal(b)), c);
+//    switch (b) {
+//      case PLUS:
+//        n = list4(atom(ATOM_binary), a, literal(":+"), c);
+//        break;
+//      case TIMES:
+//        n = list4(atom(ATOM_binary), a, literal(":*"), c);
+//        break;
+//    }
     return n;
   }
 
@@ -314,14 +320,6 @@ append_gen(ParserState *p, Node *a, Node *b)
     return n;
   }
   #define call_bin_op(a, m, b) call_bin_op_gen(p ,(a), (m), (b))
-
-  /* (:sym) */
-  static Node*
-  new_sym(ParserState *p, const char *s)
-  {
-    Node* result = list2(atom(ATOM_symbol_literal), literal(s));
-    return result;
-  }
 
   /* (:int . i) */
   static Node*
@@ -447,6 +445,7 @@ expr ::= arg.
 command_call ::= command.
 
 command(A) ::= operation(B) command_args(C). [LOWEST] { A = new_fcall(p, B, C); }
+command(A) ::= primary_value(B) call_op(C) operation2(D) command_args(E). { A = new_call(p, B, D, E, C); }
 
 command_args ::= call_args.
 
@@ -481,7 +480,15 @@ primary ::= var_ref.
 primary(A) ::= LPAREN_ARG stmt(B) RPAREN. { A = B; }
 primary ::= method_call.
 
+primary_value(A) ::= primary(B). { A = B; }
+
 method_call(A) ::= operation(B) paren_args(C). { A = new_fcall(p, B, C); }
+method_call(A) ::= primary_value(B) call_op(C) operation2(D) opt_paren_args(E). { A = new_call(p, B, D, E, C); }
+
+call_op(A) ::= PERIOD(B). { A = B; }
+
+opt_paren_args ::= none.
+opt_paren_args ::= paren_args.
 
 paren_args(A) ::= LPAREN opt_call_args(B) RPAREN. { A = B; }
 
@@ -520,6 +527,10 @@ string_interp(A) ::= STRING_MID(B). { A = list2(atom(ATOM_at_tstring_content), l
 operation(A) ::= IDENTIFIER(B). { A = list2(atom(ATOM_at_ident), literal(B)); }
 operation ::= CONSTANT.
 operation ::= FID.
+
+operation2 ::= IDENTIFIER.
+operation2 ::= CONSTANT.
+operation2 ::= FID.
 
 opt_terms ::= .
 opt_terms ::= terms.
