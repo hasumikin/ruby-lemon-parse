@@ -397,6 +397,12 @@ append_gen(ParserState *p, Node *a, Node *b)
     return list2(atom(ATOM_string_literal), a);
     //return cons((Node*)NODE_DSTR, a);
   }
+
+  static Node*
+  new_array(ParserState *p, Node *a)
+  {
+    return list2(atom(ATOM_array), a);
+  }
 }
 
 %parse_accept {
@@ -478,9 +484,13 @@ primary ::= literal.
 primary ::= string.
 primary ::= var_ref.
 primary(A) ::= LPAREN_ARG stmt(B) RPAREN. { A = B; }
+primary(A) ::= LBRACKET aref_args(B) RBRACKET. { A = new_array(p, B); }
 primary ::= method_call.
 
 primary_value(A) ::= primary(B). { A = B; }
+
+aref_args ::= none.
+aref_args(A) ::= args(B) trailer. { A = B; }
 
 method_call(A) ::= operation(B) paren_args(C). { A = new_fcall(p, B, C); }
 method_call(A) ::= primary_value(B) call_op(C) operation2(D) opt_paren_args(E). { A = new_call(p, B, D, E, C); }
@@ -531,6 +541,10 @@ operation ::= FID.
 operation2 ::= IDENTIFIER.
 operation2 ::= CONSTANT.
 operation2 ::= FID.
+
+trailer ::= .
+trailer ::= terms.
+trailer ::= COMMA.
 
 opt_terms ::= .
 opt_terms ::= terms.
