@@ -492,8 +492,13 @@ primary_value(A) ::= primary(B). { A = B; }
 aref_args ::= none.
 aref_args(A) ::= args(B) trailer. { A = B; }
 
+trailer ::= .
+trailer ::= terms.
+trailer ::= COMMA.
+
 method_call(A) ::= operation(B) paren_args(C). { A = new_fcall(p, B, C); }
 method_call(A) ::= primary_value(B) call_op(C) operation2(D) opt_paren_args(E). { A = new_call(p, B, D, E, C); }
+method_call(A) ::= primary_value(B) LBRACKET opt_call_args(C) RBRACKET. { A = new_call(p, B, "[]", C, '.'); }
 
 call_op(A) ::= PERIOD(B). { A = B; }
 
@@ -541,10 +546,6 @@ operation ::= FID.
 operation2 ::= IDENTIFIER.
 operation2 ::= CONSTANT.
 operation2 ::= FID.
-
-trailer ::= .
-trailer ::= terms.
-trailer ::= COMMA.
 
 opt_terms ::= .
 opt_terms ::= terms.
