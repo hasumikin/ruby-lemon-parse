@@ -514,6 +514,9 @@ literal ::= numeric.
 literal ::= symbol.
 
 var_ref ::= variable.
+var_ref(A) ::= KW_nil. { A = list2(atom(ATOM_var_ref), list1(atom(ATOM_kw_nil))); }
+var_ref(A) ::= KW_true. { A = list2(atom(ATOM_var_ref), list1(atom(ATOM_kw_true))); }
+var_ref(A) ::= KW_false. { A = list2(atom(ATOM_var_ref), list1(atom(ATOM_kw_false))); }
 
 numeric(A) ::= INTEGER(B). { A = new_lit(p, B, ATOM_at_int, 10, 0); }
 numeric(A) ::= FLOAT(B).   { A = new_lit(p, B, ATOM_at_float, 10, 0); }

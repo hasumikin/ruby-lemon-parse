@@ -2,10 +2,13 @@ CC := gcc
 PARSE := parse
 CRC := crc
 
-all: $(PARSE).o $(CRC).o token_helper.h
+all: $(PARSE).o $(CRC).o keyword_helper.h token_helper.h
 
 atom_helper.h: parse_header.h
 	./helper_gen.rb atom
+
+keyword_helper.h: parse.h
+	./helper_gen.rb keyword
 
 token_helper.h: parse.h
 	./helper_gen.rb token
