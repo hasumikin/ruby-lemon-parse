@@ -484,7 +484,7 @@ primary ::= literal.
 primary ::= string.
 primary ::= var_ref.
 primary(A) ::= LPAREN_ARG stmt(B) RPAREN. { A = B; }
-primary(A) ::= LBRACKET aref_args(B) RBRACKET. { A = new_array(p, B); }
+primary(A) ::= LBRACKET_ARRAY aref_args(B) RBRACKET. { A = new_array(p, B); }
 primary ::= method_call.
 
 primary_value(A) ::= primary(B). { A = B; }
