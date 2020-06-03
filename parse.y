@@ -313,6 +313,12 @@ append_gen(ParserState *p, Node *a, Node *b)
   }
   #define call_bin_op(a, m, b) call_bin_op_gen(p ,(a), (m), (b))
 
+  static Node*
+  call_uni_op(ParserState *p, Node *recv, const char *op)
+  {
+    return new_call(p, recv, op, 0, 1);
+  }
+
   /* (:int . i) */
   static Node*
   new_lit(ParserState *p, const char *s, AtomType a, int base, int suffix)
@@ -421,7 +427,9 @@ append_gen(ParserState *p, Node *a, Node *b)
 %nonassoc LBRACE_ARG.
 %left PLUS MINUS.
 %left DIVIDE TIMES SURPLUS.
+%right UMINUS_NUM UMINUS.
 %right POW.
+%right UEXCL UTILDE UPLUS.
 
 program ::= top_compstmt(B). { yypParser->p->root = list2(atom(ATOM_program), B); }
 top_compstmt(A) ::= top_stmts(B) opt_terms. { A = B; }
@@ -462,6 +470,10 @@ arg(A) ::= arg(B) TIMES arg(C).  { A = call_bin_op(B, "*", C); }
 arg(A) ::= arg(B) DIVIDE arg(C). { A = call_bin_op(B, "/", C); }
 arg(A) ::= arg(B) SURPLUS arg(C). { A = call_bin_op(B, "%", C); }
 arg(A) ::= arg(B) POW arg(C). { A = call_bin_op(B, "**", C); }
+arg(A) ::= UPLUS arg(B). { A = call_uni_op(p, B, "+@"); }
+arg(A) ::= UMINUS arg(B). { A = call_uni_op(p, B, "-@"); }
+arg(A) ::= UEXCL arg(B). { A = call_uni_op(p, B, "!"); }
+arg(A) ::= UTILDE arg(B). { A = call_uni_op(p, B, "~"); }
 arg ::= primary.
 
 arg_rhs ::= arg.
