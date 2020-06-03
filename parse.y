@@ -461,6 +461,7 @@ arg(A) ::= arg(B) MINUS arg(C).  { A = call_bin_op(B, "-", C); }
 arg(A) ::= arg(B) TIMES arg(C).  { A = call_bin_op(B, "*", C); }
 arg(A) ::= arg(B) DIVIDE arg(C). { A = call_bin_op(B, "/", C); }
 arg(A) ::= arg(B) SURPLUS arg(C). { A = call_bin_op(B, "%", C); }
+arg(A) ::= arg(B) POW arg(C). { A = call_bin_op(B, "**", C); }
 arg ::= primary.
 
 arg_rhs ::= arg.
