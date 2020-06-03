@@ -423,10 +423,7 @@ append_gen(ParserState *p, Node *a, Node *b)
 %left DIVIDE TIMES SURPLUS.
 %right POW.
 
-program ::= top_compstmt(B).   {
-//  if (!p->locals) p->locals = cons(atom(":program"),0);
-  //if (!p->locals) {Node *a = cons(atom(":program"),0);}
-  yypParser->p->root = list2(atom(ATOM_program), B); }
+program ::= top_compstmt(B). { yypParser->p->root = list2(atom(ATOM_program), B); }
 top_compstmt(A) ::= top_stmts(B) opt_terms. { A = B; }
 top_stmts(A) ::= none. { A = new_begin(p, 0); }
 top_stmts(A) ::= top_stmt(B). { A = new_begin(p, B); }
@@ -434,7 +431,8 @@ top_stmts(A) ::= top_stmts(B) terms top_stmt(C). {
   A = append(B, newline_node(C)); // TODO mrubyのparse.yではpushになっている。。。
   }
 top_stmt ::= stmt.
-//stmts(A) ::= stmt(B). { A = new_begin(B); }
+
+compstmt(A) ::= stmt(B) opt_terms. { A = B; }
 
 stmt ::= expr.
 
@@ -477,7 +475,7 @@ variable(A) ::= CONSTANT(B).   { A = new_const(p, B); }
 primary ::= literal.
 primary ::= string.
 primary ::= var_ref.
-primary(A) ::= LPAREN_ARG stmt(B) RPAREN. { A = B; }
+primary(A) ::= LPAREN compstmt(B) RPAREN. { A = B; }
 primary(A) ::= LBRACKET_ARRAY aref_args(B) RBRACKET. { A = new_array(p, B); }
 primary ::= method_call.
 
