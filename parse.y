@@ -283,16 +283,7 @@ append_gen(ParserState *p, Node *a, Node *b)
   static Node*
   new_call(ParserState *p, Node *a, const char* b, Node *c, int pass)
   {
-    Node *n = list4(atom(pass ? ATOM_call : ATOM_scall), a, list2(atom(ATOM_at_ident), literal(b)), c);
-//    switch (b) {
-//      case PLUS:
-//        n = list4(atom(ATOM_binary), a, literal(":+"), c);
-//        break;
-//      case TIMES:
-//        n = list4(atom(ATOM_binary), a, literal(":*"), c);
-//        break;
-//    }
-    return n;
+    return list4(atom(pass ? ATOM_call : ATOM_scall), a, list2(atom(ATOM_at_ident), literal(b)), c);
   }
 
   /* (:begin prog...) */
@@ -313,11 +304,12 @@ append_gen(ParserState *p, Node *a, Node *b)
   #define newline_node(n) (n)
 
   static Node*
-  call_bin_op_gen(ParserState *p, Node *recv, int m, Node *arg1)
+  call_bin_op_gen(ParserState *p, Node *recv, const char *op, Node *arg)
   {
-    //Node *n = new_call(p, recv, m, list1(list1(arg1)), 1);
-    Node *n = new_call(p, recv, m, arg1, 1);
-    return n;
+    return new_call(p, recv, op,
+      list2(atom(ATOM_args_add_block),
+        list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), arg)),
+      1);
   }
   #define call_bin_op(a, m, b) call_bin_op_gen(p ,(a), (m), (b))
 
@@ -428,7 +420,8 @@ append_gen(ParserState *p, Node *a, Node *b)
 %nonassoc LOWEST.
 %nonassoc LBRACE_ARG.
 %left PLUS MINUS.
-%left DIVIDE TIMES.
+%left DIVIDE TIMES SURPLUS.
+%right POW.
 
 program ::= top_compstmt(B).   {
 //  if (!p->locals) p->locals = cons(atom(":program"),0);
@@ -465,10 +458,11 @@ args(A) ::= arg(B). { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)),
 args(A) ::= args(B) COMMA arg(C). { A = append(B, C); }
 
 arg(A) ::= lhs(B) E arg_rhs(C). { A = new_asgn(p, B, C); }
-//arg(A) ::= arg(B) PLUS arg(C).   { A = call_bin_op(B, PLUS ,C); }
-//arg(A) ::= arg(B) MINUS arg(C).  { A = call_bin_op(B, MINUS, C); }
-//arg(A) ::= arg(B) TIMES arg(C).  { A = call_bin_op(B, TIMES, C); }
-//arg(A) ::= arg(B) DIVIDE arg(C). { A = call_bin_op(B, DIVIDE, C); }
+arg(A) ::= arg(B) PLUS arg(C).   { A = call_bin_op(B, "+" ,C); }
+arg(A) ::= arg(B) MINUS arg(C).  { A = call_bin_op(B, "-", C); }
+arg(A) ::= arg(B) TIMES arg(C).  { A = call_bin_op(B, "*", C); }
+arg(A) ::= arg(B) DIVIDE arg(C). { A = call_bin_op(B, "/", C); }
+arg(A) ::= arg(B) SURPLUS arg(C). { A = call_bin_op(B, "%", C); }
 arg ::= primary.
 
 arg_rhs ::= arg.
