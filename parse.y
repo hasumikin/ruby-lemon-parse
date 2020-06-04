@@ -426,6 +426,8 @@ append_gen(ParserState *p, Node *a, Node *b)
 %nonassoc LOWEST.
 %nonassoc LBRACE_ARG.
 
+%right E.
+%left GT GEQ LT LEQ. // > >= < <=
 %left PLUS MINUS.
 %left DIVIDE TIMES SURPLUS.
 %right UMINUS_NUM UMINUS.
@@ -476,6 +478,8 @@ arg(A) ::= UMINUS arg(B). { A = call_uni_op(p, B, "-@"); }
 arg(A) ::= arg(B) OR arg(C). { A = call_bin_op(B, "|", C); }
 arg(A) ::= arg(B) XOR arg(C). { A = call_bin_op(B, "^", C); }
 arg(A) ::= arg(B) AND arg(C). { A = call_bin_op(B, "&", C); }
+arg(A) ::= arg(B) GT arg(C). { A = call_bin_op(B, ">", C); }
+arg(A) ::= arg(B) LT arg(C). { A = call_bin_op(B, "<", C); }
 arg(A) ::= UNEG arg(B). { A = call_uni_op(p, B, "!"); }
 arg(A) ::= UNOT arg(B). { A = call_uni_op(p, B, "~"); }
 arg ::= primary.
