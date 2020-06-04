@@ -472,6 +472,9 @@ arg(A) ::= arg(B) SURPLUS arg(C). { A = call_bin_op(B, "%", C); }
 arg(A) ::= arg(B) POW arg(C). { A = call_bin_op(B, "**", C); }
 arg(A) ::= UPLUS arg(B). { A = call_uni_op(p, B, "+@"); }
 arg(A) ::= UMINUS arg(B). { A = call_uni_op(p, B, "-@"); }
+arg(A) ::= arg(B) XOR arg(C). { A = call_bin_op(B, "|", C); }
+arg(A) ::= arg(B) OR arg(C). { A = call_bin_op(B, "^", C); }
+arg(A) ::= arg(B) AND arg(C). { A = call_bin_op(B, "&", C); }
 arg(A) ::= UEXCL arg(B). { A = call_uni_op(p, B, "!"); }
 arg(A) ::= UTILDE arg(B). { A = call_uni_op(p, B, "~"); }
 arg ::= primary.
