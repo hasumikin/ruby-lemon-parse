@@ -17,6 +17,8 @@ typedef enum atom_type {
   ATOM_vcall,
   ATOM_command,
   ATOM_assign,
+  ATOM_op_assign,
+  ATOM_at_op,
   ATOM_var_field,
   ATOM_var_ref,
   ATOM_string_add,

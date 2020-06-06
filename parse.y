@@ -365,6 +365,12 @@ append_gen(ParserState *p, Node *a, Node *b)
     return list3(atom(ATOM_assign), lhs, rhs);
   }
 
+  static Node*
+  new_op_asgn(ParserState *p, Node *lhs, const char *op, Node *rhs)
+  {
+    return list4(atom(ATOM_op_assign), lhs, list2(atom(ATOM_at_op), literal(op)), rhs);
+  }
+
   /* (:self) */
   static Node*
   new_self(ParserState *p)
@@ -471,6 +477,7 @@ args(A) ::= arg(B). { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)),
 args(A) ::= args(B) COMMA arg(C). { A = append(B, C); }
 
 arg(A) ::= lhs(B) E arg_rhs(C). { A = new_asgn(p, B, C); }
+arg(A) ::= var_lhs(B) OP_ASGN(C) arg_rhs(D). { A = new_op_asgn(p, B, C, D); }
 arg(A) ::= arg(B) PLUS arg(C).   { A = call_bin_op(B, "+" ,C); }
 arg(A) ::= arg(B) MINUS arg(C).  { A = call_bin_op(B, "-", C); }
 arg(A) ::= arg(B) TIMES arg(C).  { A = call_bin_op(B, "*", C); }
@@ -499,6 +506,8 @@ arg ::= primary.
 arg_rhs ::= arg.
 
 lhs ::= variable.
+
+var_lhs ::= variable.
 
 variable(A) ::= IDENTIFIER(B). { A = new_lvar(p, B); }
 variable(A) ::= IVAR(B).       { A = new_ivar(p, B); }
