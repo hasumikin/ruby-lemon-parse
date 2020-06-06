@@ -427,6 +427,7 @@ append_gen(ParserState *p, Node *a, Node *b)
 %nonassoc LBRACE_ARG.
 
 %right E.
+%nonassoc EQ EQQ NEQ.
 %left GT GEQ LT LEQ. // > >= < <=
 %left OR XOR.
 %left AND.
@@ -481,8 +482,14 @@ arg(A) ::= UMINUS arg(B). { A = call_uni_op(p, B, "-@"); }
 arg(A) ::= arg(B) OR arg(C). { A = call_bin_op(B, "|", C); }
 arg(A) ::= arg(B) XOR arg(C). { A = call_bin_op(B, "^", C); }
 arg(A) ::= arg(B) AND arg(C). { A = call_bin_op(B, "&", C); }
+arg(A) ::= arg(B) CMP arg(C). { A = call_bin_op(B, "<=>", C); }
 arg(A) ::= arg(B) GT arg(C). { A = call_bin_op(B, ">", C); }
+arg(A) ::= arg(B) GEQ arg(C). { A = call_bin_op(B, ">=", C); }
 arg(A) ::= arg(B) LT arg(C). { A = call_bin_op(B, "<", C); }
+arg(A) ::= arg(B) LEQ arg(C). { A = call_bin_op(B, "<=", C); }
+arg(A) ::= arg(B) EQ arg(C). { A = call_bin_op(B, "==", C); }
+arg(A) ::= arg(B) EQQ arg(C). { A = call_bin_op(B, "===", C); }
+arg(A) ::= arg(B) NEQ arg(C). { A = call_bin_op(B, "!=", C); }
 arg(A) ::= UNEG arg(B). { A = call_uni_op(p, B, "!"); }
 arg(A) ::= UNOT arg(B). { A = call_uni_op(p, B, "~"); }
 arg(A) ::= arg(B) LSHIFT arg(C). { A = call_bin_op(B, "<<", C); }
