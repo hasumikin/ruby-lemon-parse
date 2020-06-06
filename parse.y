@@ -428,6 +428,9 @@ append_gen(ParserState *p, Node *a, Node *b)
 
 %right E.
 %left GT GEQ LT LEQ. // > >= < <=
+%left OR XOR.
+%left AND.
+%left LSHIFT RSHIFT.
 %left PLUS MINUS.
 %left DIVIDE TIMES SURPLUS.
 %right UMINUS_NUM UMINUS.
@@ -482,6 +485,8 @@ arg(A) ::= arg(B) GT arg(C). { A = call_bin_op(B, ">", C); }
 arg(A) ::= arg(B) LT arg(C). { A = call_bin_op(B, "<", C); }
 arg(A) ::= UNEG arg(B). { A = call_uni_op(p, B, "!"); }
 arg(A) ::= UNOT arg(B). { A = call_uni_op(p, B, "~"); }
+arg(A) ::= arg(B) LSHIFT arg(C). { A = call_bin_op(B, "<<", C); }
+arg(A) ::= arg(B) RSHIFT arg(C). { A = call_bin_op(B, ">>", C); }
 arg ::= primary.
 
 arg_rhs ::= arg.
