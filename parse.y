@@ -338,25 +338,25 @@ append_gen(ParserState *p, Node *a, Node *b)
   static Node*
   new_lvar(ParserState *p, const char *s)
   {
-    return list2(atom(ATOM_var_field), list2(atom(ATOM_at_ident), literal(s)));
+    return list2(atom(ATOM_lvar), literal(s));
   }
 
   static Node*
   new_ivar(ParserState *p, const char *s)
   {
-    return list2(atom(ATOM_var_field), list2(atom(ATOM_at_ivar), literal(s)));
+    return list2(atom(ATOM_at_ivar), literal(s));
   }
 
   static Node*
   new_gvar(ParserState *p, const char *s)
   {
-    return list2(atom(ATOM_var_field), list2(atom(ATOM_at_gvar), literal(s)));
+    return list2(atom(ATOM_at_gvar), literal(s));
   }
 
   static Node*
   new_const(ParserState *p, const char *s)
   {
-    return list2(atom(ATOM_var_field), list2(atom(ATOM_at_const), literal(s)));
+    return list2(atom(ATOM_at_const), literal(s));
   }
 
   static Node*
@@ -506,6 +506,8 @@ arg ::= primary.
 arg_rhs ::= arg.
 
 lhs ::= variable.
+lhs(A) ::= primary_value(B) LBRACKET opt_call_args(C) RBRACKET. { A = new_call(p, B, "[]", C, '.'); }
+lhs(A) ::= primary_value(B) call_op(C) IDENTIFIER(D). { A = new_call(p, B, D, 0, C); }
 
 var_lhs ::= variable.
 
@@ -548,9 +550,9 @@ literal ::= numeric.
 literal ::= symbol.
 
 var_ref ::= variable.
-var_ref(A) ::= KW_nil. { A = list2(atom(ATOM_var_ref), list1(atom(ATOM_kw_nil))); }
-var_ref(A) ::= KW_true. { A = list2(atom(ATOM_var_ref), list1(atom(ATOM_kw_true))); }
-var_ref(A) ::= KW_false. { A = list2(atom(ATOM_var_ref), list1(atom(ATOM_kw_false))); }
+var_ref(A) ::= KW_nil. { A = list1(atom(ATOM_kw_nil)); }
+var_ref(A) ::= KW_true. { A = list1(atom(ATOM_kw_true)); }
+var_ref(A) ::= KW_false. { A = list1(atom(ATOM_kw_false)); }
 
 numeric(A) ::= INTEGER(B). { A = new_lit(p, B, ATOM_at_int, 10, 0); }
 numeric(A) ::= FLOAT(B).   { A = new_lit(p, B, ATOM_at_float, 10, 0); }

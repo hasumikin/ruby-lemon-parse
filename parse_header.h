@@ -10,6 +10,7 @@ typedef enum atom_type {
   ATOM_kw_nil,
   ATOM_kw_true,
   ATOM_kw_false,
+  ATOM_lvar,
   ATOM_array,
   ATOM_call,
   ATOM_scall,
