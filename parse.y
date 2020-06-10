@@ -237,16 +237,14 @@ list6_gen(ParserState *p, Node *a, Node *b, Node *c, Node *d, Node *e, Node *f)
 static Node*
 append_gen(ParserState *p, Node *a, Node *b)
 {
-//  Node *c = a;
-//  if (!a) return b;
-//  while (c->cons.cdr) {
-//    c = c->cons.cdr;
-//  }
-//  if (b) {
-//    c->cons.cdr = b;
-//  }
-//  return a;
-  return list3(atom(ATOM_args_add), a, b);
+  Node *c = a;
+  if (!a) return b;
+  if (!b) return a;
+  while (c->cons.cdr) {
+    c = c->cons.cdr;
+  }
+  c->cons.cdr = b;
+  return a;
 }
 #define append(a,b) append_gen(p,(a),(b))
 #define push(a,b) append_gen(p,(a),list1(b))
@@ -407,6 +405,12 @@ append_gen(ParserState *p, Node *a, Node *b)
   {
     return list2(atom(ATOM_array), a);
   }
+
+  static Node*
+  new_hash(ParserState *p, Node *a)
+  {
+    return list2(atom(ATOM_hash), a);
+  }
 }
 
 %parse_accept {
@@ -449,7 +453,7 @@ top_compstmt(A) ::= top_stmts(B) opt_terms. { A = B; }
 top_stmts(A) ::= none. { A = new_begin(p, 0); }
 top_stmts(A) ::= top_stmt(B). { A = new_begin(p, B); }
 top_stmts(A) ::= top_stmts(B) terms top_stmt(C). {
-  A = append(B, newline_node(C)); // TODO mrubyのparse.yではpushになっている。。。
+  A = list3(atom(ATOM_args_add), B, newline_node(C));
   }
 top_stmt ::= stmt.
 
@@ -474,7 +478,7 @@ opt_block_arg(A) ::= COMMA block_arg(B). { A = B; }
 opt_block_arg(A) ::= none. { A = 0; }
 
 args(A) ::= arg(B). { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), B); }
-args(A) ::= args(B) COMMA arg(C). { A = append(B, C); }
+args(A) ::= args(B) COMMA arg(C). { A = list3(atom(ATOM_args_add), B, C); }
 
 arg(A) ::= lhs(B) E arg_rhs(C). { A = new_asgn(p, B, C); }
 arg(A) ::= var_lhs(B) OP_ASGN(C) arg_rhs(D). { A = new_op_asgn(p, B, C, D); }
@@ -521,9 +525,20 @@ primary ::= string.
 primary ::= var_ref.
 primary(A) ::= LPAREN compstmt(B) RPAREN. { A = B; }
 primary(A) ::= LBRACKET_ARRAY aref_args(B) RBRACKET. { A = new_array(p, B); }
+primary(A) ::= LBRACE assoc_list(B) RBRACE. { A = new_hash(p, B); }
 primary ::= method_call.
 
 primary_value(A) ::= primary(B). { A = B; }
+
+assoc_list ::= none.
+assoc_list(A) ::= assocs(B) trailer. { A = B; }
+
+assocs(A) ::= assoc(B). { A = list1(B); }
+assocs(A) ::= assocs(B) COMMA assoc(C). { A = push(B, C); }
+
+assoc(A) ::= arg(B) ASSOC arg(C). { A = list3(atom(ATOM_assoc_new), B, C); }
+assoc(A) ::= LABEL(B) arg(C). { A = list3(atom(ATOM_assoc_new), new_sym(p, B), C); }
+
 
 aref_args ::= none.
 aref_args(A) ::= args(B) trailer. { A = B; }

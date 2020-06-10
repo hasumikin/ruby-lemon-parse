@@ -12,6 +12,8 @@ typedef enum atom_type {
   ATOM_kw_false,
   ATOM_lvar,
   ATOM_array,
+  ATOM_hash,
+  ATOM_assoc_new,
   ATOM_call,
   ATOM_scall,
   ATOM_fcall,
