@@ -319,15 +319,15 @@ append_gen(ParserState *p, Node *a, Node *b)
 
   /* (:int . i) */
   static Node*
-  new_lit(ParserState *p, const char *s, AtomType a, int base, int suffix)
-  { // TODO base は10進法などを表す
+  new_lit(ParserState *p, const char *s, AtomType a)
+  {
     Node* result = list2(atom(a), literal(s));
     return result;
   }
 
   /* nageted integer */
   static Node*
-  new_neglit(ParserState *p, const char *s, AtomType a, int base, int suffix)
+  new_neglit(ParserState *p, const char *s, AtomType a)
   {
     Node* result = list3(atom(ATOM_unary), literal("-") ,list2(atom(a), literal(s)));
     return result;
@@ -569,10 +569,10 @@ var_ref(A) ::= KW_nil. { A = list1(atom(ATOM_kw_nil)); }
 var_ref(A) ::= KW_true. { A = list1(atom(ATOM_kw_true)); }
 var_ref(A) ::= KW_false. { A = list1(atom(ATOM_kw_false)); }
 
-numeric(A) ::= INTEGER(B). { A = new_lit(p, B, ATOM_at_int, 10, 0); }
-numeric(A) ::= FLOAT(B).   { A = new_lit(p, B, ATOM_at_float, 10, 0); }
-numeric(A) ::= UMINUS_NUM INTEGER(B). { A = new_neglit(p, B, ATOM_at_int, 10, 0); }
-numeric(A) ::= UMINUS_NUM FLOAT(B).   { A = new_neglit(p, B, ATOM_at_float, 10, 0); }
+numeric(A) ::= INTEGER(B). { A = new_lit(p, B, ATOM_at_int); }
+numeric(A) ::= FLOAT(B).   { A = new_lit(p, B, ATOM_at_float); }
+numeric(A) ::= UMINUS_NUM INTEGER(B). { A = new_neglit(p, B, ATOM_at_int); }
+numeric(A) ::= UMINUS_NUM FLOAT(B).   { A = new_neglit(p, B, ATOM_at_float); }
 
 symbol(A) ::= basic_symbol(B). { A = new_sym(p, B); }
 
