@@ -269,6 +269,12 @@ append_gen(ParserState *p, Node *a, Node *b)
   }
 */
 
+  static Node*
+  new_return(ParserState *p, Node *array)
+  {
+    return list2(atom(ATOM_kw_return), array);
+  }
+
   /* (:sym) */
   static Node*
   new_sym(ParserState *p, const char *s)
@@ -407,6 +413,15 @@ append_gen(ParserState *p, Node *a, Node *b)
   }
 
   static Node*
+  ret_args(ParserState *p, Node *a)
+  {
+    if (Node_atomType(a->cons.cdr->cons.car) == ATOM_args_add)
+      /* multiple return values will be an array */
+      return new_array(p, a);
+    return a;
+  }
+
+  static Node*
   new_hash(ParserState *p, Node *a)
   {
     return list2(atom(ATOM_hash), a);
@@ -453,7 +468,7 @@ top_compstmt(A) ::= top_stmts(B) opt_terms. { A = B; }
 top_stmts(A) ::= none. { A = new_begin(p, 0); }
 top_stmts(A) ::= top_stmt(B). { A = new_begin(p, B); }
 top_stmts(A) ::= top_stmts(B) terms top_stmt(C). {
-  A = list3(atom(ATOM_args_add), B, newline_node(C));
+  A = list3(atom(ATOM_stmts_add), B, newline_node(C));
   }
 top_stmt ::= stmt.
 
@@ -468,10 +483,11 @@ command_call ::= command.
 
 command(A) ::= operation(B) command_args(C). [LOWEST] { A = new_fcall(p, B, C); }
 command(A) ::= primary_value(B) call_op(C) operation2(D) command_args(E). { A = new_call(p, B, D, E, C); }
+command(A) ::= KW_return call_args(B). { A = new_return(p, ret_args(p, B)); }
 
 command_args ::= call_args.
 
-call_args(A) ::= args(B) opt_block_arg(C). { A = list3(atom(ATOM_args_add_block), B, C); }
+call_args(A) ::= args(B) opt_block_arg(C). { A = append(B, C); }
 
 block_arg(A) ::= AMPER arg(B). { A = new_block_arg(p, B); }
 opt_block_arg(A) ::= COMMA block_arg(B). { A = B; }
@@ -526,6 +542,7 @@ primary ::= var_ref.
 primary(A) ::= LPAREN compstmt(B) RPAREN. { A = B; }
 primary(A) ::= LBRACKET_ARRAY aref_args(B) RBRACKET. { A = new_array(p, B); }
 primary(A) ::= LBRACE assoc_list(B) RBRACE. { A = new_hash(p, B); }
+primary(A) ::= KW_return. { A = new_return(p, 0); }
 primary ::= method_call.
 
 primary_value(A) ::= primary(B). { A = B; }
