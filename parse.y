@@ -373,7 +373,7 @@ append_gen(ParserState *p, Node *a, Node *b)
   static Node*
   new_self(ParserState *p)
   {
-    return list1(atom(ATOM_self));
+    return list1(atom(ATOM_kw_self));
   }
 
   /* (:fcall self mid args) */
@@ -566,6 +566,7 @@ literal ::= symbol.
 
 var_ref ::= variable.
 var_ref(A) ::= KW_nil. { A = list1(atom(ATOM_kw_nil)); }
+var_ref(A) ::= KW_self. { A = new_self(p); }
 var_ref(A) ::= KW_true. { A = list1(atom(ATOM_kw_true)); }
 var_ref(A) ::= KW_false. { A = list1(atom(ATOM_kw_false)); }
 
