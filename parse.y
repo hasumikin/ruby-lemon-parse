@@ -311,8 +311,7 @@ append_gen(ParserState *p, Node *a, Node *b)
   call_bin_op_gen(ParserState *p, Node *recv, const char *op, Node *arg)
   {
     return new_call(p, recv, op,
-      list2(atom(ATOM_args_add_block),
-        list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), arg)),
+        list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), arg),
       1);
   }
   #define call_bin_op(a, m, b) call_bin_op_gen(p ,(a), (m), (b))
@@ -475,6 +474,15 @@ top_stmt ::= stmt.
 compstmt(A) ::= stmt(B) opt_terms. { A = B; }
 
 stmt ::= expr.
+//stmt ::= command_asgn.
+//
+//command_asgn(A) ::= lhs(B) E command_rhs(C). { A = new_asgn(p, B, C); }
+//command_asgn(A) ::= var_lhs(B) OP_ASGN(C) command_rhs(D). { A = new_op_asgn(p, B, C, D); }
+//command_asgn(A) ::= primary_value(B) LBRACKET opt_call_args(C) RBRACKET OP_ASGN(D) command_rhs(E).
+//  { A = new_op_asgn(p, new_call(p, B, "[]", C, '.'), D, E); }
+//
+//command_rhs ::= command_call.
+//command_rhs ::= command_asgn.
 
 expr ::= command_call.
 expr ::= arg.
@@ -498,6 +506,10 @@ args(A) ::= args(B) COMMA arg(C). { A = list3(atom(ATOM_args_add), B, C); }
 
 arg(A) ::= lhs(B) E arg_rhs(C). { A = new_asgn(p, B, C); }
 arg(A) ::= var_lhs(B) OP_ASGN(C) arg_rhs(D). { A = new_op_asgn(p, B, C, D); }
+arg(A) ::= primary_value(B) LBRACKET opt_call_args(C) RBRACKET OP_ASGN(D) arg_rhs(E).
+  { A = new_op_asgn(p, new_call(p, B, "[]", C, '.'), D, E); }
+arg(A) ::= primary_value(B) call_op(C) IDENTIFIER(D) OP_ASGN(E) arg_rhs(F).
+  { A = new_op_asgn(p, new_call(p, B, D, 0, C), E, F); }
 arg(A) ::= arg(B) PLUS arg(C).   { A = call_bin_op(B, "+" ,C); }
 arg(A) ::= arg(B) MINUS arg(C).  { A = call_bin_op(B, "-", C); }
 arg(A) ::= arg(B) TIMES arg(C).  { A = call_bin_op(B, "*", C); }
@@ -526,7 +538,8 @@ arg ::= primary.
 arg_rhs ::= arg.
 
 lhs ::= variable.
-lhs(A) ::= primary_value(B) LBRACKET opt_call_args(C) RBRACKET. { A = new_call(p, B, "[]", C, '.'); }
+lhs(A) ::= primary_value(B) LBRACKET opt_call_args(C) RBRACKET.
+  { A = new_call(p, B, "[]", C, '.'); }
 lhs(A) ::= primary_value(B) call_op(C) IDENTIFIER(D). { A = new_call(p, B, D, 0, C); }
 
 var_lhs ::= variable.
