@@ -595,6 +595,25 @@ opt_call_args ::= call_args opt_terms.
 
 literal ::= numeric.
 literal ::= symbol.
+literal ::= words.
+
+words(A) ::= WORDS_BEG opt_sep strings(B) opt_sep STRING_END.
+  { A = new_array(p, list2(atom(ATOM_args_add), B)); }
+strings ::= strings WORD_SEP string.
+strings ::= string.
+
+string ::= STRING_MID.
+string ::= none.
+
+opt_sep ::= none.
+opt_sep ::= WORDS_SEP.
+//opt_words ::= none.
+//opt_words(A) ::= STRING_MID(B) words_tail. {
+//  A = list3(atom(ATOM_args_new),
+//            list1(atom(ATOM_string_content)),
+//            list2(atom(ATOM_at_tstring_content), literal(B))); }
+//words_tail ::= none.
+//words_tail(A) ::= WORDS_SEP opt_words(B). { A = B; }
 
 var_ref ::= variable.
 var_ref(A) ::= KW_nil. { A = list1(atom(ATOM_kw_nil)); }
