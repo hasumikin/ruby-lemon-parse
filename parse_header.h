@@ -29,6 +29,7 @@ typedef enum atom_type {
   ATOM_args_new,
   ATOM_args_add,
   ATOM_args_add_block,
+  ATOM_block_arg,
   ATOM_kw_self,
   ATOM_kw_return,
   ATOM_at_int,
@@ -44,7 +45,6 @@ typedef enum atom_type {
   ATOM_at_gvar,
   ATOM_at_const,
   ATOM_at_tstring_content,
-  NODE_BLOCK_ARG
 } AtomType;
 
 typedef enum {

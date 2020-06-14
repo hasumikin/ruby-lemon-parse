@@ -394,7 +394,7 @@ append_gen(ParserState *p, Node *a, Node *b)
   static Node*
   new_block_arg(ParserState *p, Node *a)
   {
-    return cons((Node*)NODE_BLOCK_ARG, a);
+    return list2(atom(ATOM_block_arg), a);
   }
 
   /* (:dstr . a) */
@@ -496,8 +496,10 @@ command(A) ::= KW_return call_args(B). { A = new_return(p, ret_args(p, B)); }
 command_args ::= call_args.
 
 call_args(A) ::= args(B) opt_block_arg(C). { A = append(B, C); }
+call_args(A) ::= block_arg(B). { A = list2(atom(ATOM_args_add), B); }
 
 block_arg(A) ::= AMPER arg(B). { A = new_block_arg(p, B); }
+
 opt_block_arg(A) ::= COMMA block_arg(B). { A = B; }
 opt_block_arg(A) ::= none. { A = 0; }
 
