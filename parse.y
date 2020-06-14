@@ -25,9 +25,7 @@
   RBRACE
   WORDS_BEG
   WORDS_SEP
-  QWORDS_BEG
   SYMBOLS_BEG
-  QSYMBOLS_BEG
   LABEL
   FLOAT
   .
@@ -402,7 +400,6 @@ append_gen(ParserState *p, Node *a, Node *b)
   new_dstr(ParserState *p, Node *a)
   {
     return list2(atom(ATOM_string_literal), a);
-    //return cons((Node*)NODE_DSTR, a);
   }
 
   static Node*
@@ -596,24 +593,31 @@ opt_call_args ::= call_args opt_terms.
 literal ::= numeric.
 literal ::= symbol.
 literal ::= words.
+literal ::= symbols.
 
-words(A) ::= WORDS_BEG opt_sep strings(B) opt_sep STRING_END.
-  { A = new_array(p, list2(atom(ATOM_args_add), B)); }
-strings ::= strings WORD_SEP string.
-strings ::= string.
+words(A) ::= WORDS_BEG opt_sep word_list(B) STRING_END.
+  { A = new_array(p, B); }
+word_list(A) ::= word(B).
+  { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), B); }
+word_list(A) ::= word_list(B) opt_sep word(C).
+  { A = list3(atom(ATOM_args_add), B, C); }
+word(A) ::= STRING_MID(B).
+  { A = list2(atom(ATOM_string_literal),
+              list3(atom(ATOM_string_add),
+                    list1(atom(ATOM_string_content)),
+                    list2(atom(ATOM_at_tstring_content), literal(B)))); }
 
-string ::= STRING_MID.
-string ::= none.
+symbols(A) ::= SYMBOLS_BEG opt_sep symbol_list(B) STRING_END.
+  { A = new_array(p, B); }
+symbol_list(A) ::= symbol_word(B).
+  { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), B); }
+symbol_list(A) ::= symbol_list(B) opt_sep symbol_word(C).
+  { A = list3(atom(ATOM_args_add), B, C); }
+symbol_word(A) ::= STRING_MID(B).
+  { A = list2(atom(ATOM_symbol_literal), literal(B)); }
 
 opt_sep ::= none.
 opt_sep ::= WORDS_SEP.
-//opt_words ::= none.
-//opt_words(A) ::= STRING_MID(B) words_tail. {
-//  A = list3(atom(ATOM_args_new),
-//            list1(atom(ATOM_string_content)),
-//            list2(atom(ATOM_at_tstring_content), literal(B))); }
-//words_tail ::= none.
-//words_tail(A) ::= WORDS_SEP opt_words(B). { A = B; }
 
 var_ref ::= variable.
 var_ref(A) ::= KW_nil. { A = list1(atom(ATOM_kw_nil)); }
