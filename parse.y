@@ -604,7 +604,7 @@ word_list(A) ::= word(B).
   { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), B); }
 word_list(A) ::= word_list(B) opt_sep word(C).
   { A = list3(atom(ATOM_args_add), B, C); }
-word(A) ::= STRING_MID(B).
+word(A) ::= STRING(B).
   { A = list2(atom(ATOM_string_literal),
               list3(atom(ATOM_string_add),
                     list1(atom(ATOM_string_content)),
@@ -616,7 +616,7 @@ symbol_list(A) ::= symbol_word(B).
   { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), B); }
 symbol_list(A) ::= symbol_list(B) opt_sep symbol_word(C).
   { A = list3(atom(ATOM_args_add), B, C); }
-symbol_word(A) ::= STRING_MID(B).
+symbol_word(A) ::= STRING(B).
   { A = list2(atom(ATOM_symbol_literal), literal(B)); }
 
 opt_sep ::= none.
@@ -650,7 +650,7 @@ string_fragment(A) ::= STRING_BEG string_rep(C) STRING_END. { A = new_dstr(p, li
 string_rep ::= string_interp.
 string_rep(A) ::= string_rep(B) string_interp(C). { A = append(B, C); }
 
-string_interp(A) ::= STRING_MID(B). { A = list2(atom(ATOM_at_tstring_content), literal(B)); }
+string_interp(A) ::= STRING(B). { A = list2(atom(ATOM_at_tstring_content), literal(B)); }
 
 operation(A) ::= IDENTIFIER(B). { A = list2(atom(ATOM_at_ident), literal(B)); }
 operation ::= CONSTANT.
