@@ -447,7 +447,8 @@ append_gen(ParserState *p, Node *a, Node *b)
 %nonassoc LOWEST.
 %nonassoc LBRACE_ARG.
 
-%right E.
+%right KW_not.
+%right E OP_ASGN.
 %nonassoc EQ EQQ NEQ.
 %left GT GEQ LT LEQ. // > >= < <=
 %left OR XOR.
@@ -555,6 +556,8 @@ primary(A) ::= LPAREN compstmt(B) RPAREN. { A = B; }
 primary(A) ::= LBRACKET_ARRAY aref_args(B) RBRACKET. { A = new_array(p, B); }
 primary(A) ::= LBRACE assoc_list(B) RBRACE. { A = new_hash(p, B); }
 primary(A) ::= KW_return. { A = new_return(p, 0); }
+primary(A) ::= KW_not LPAREN expr(B) RPAREN. { A = call_uni_op(p, B, "!"); }
+primary(A) ::= KW_not LPAREN RPAREN. { A = call_uni_op(p, list1(atom(ATOM_kw_nil)), "!"); }
 primary ::= method_call.
 
 primary_value(A) ::= primary(B). { A = B; }
