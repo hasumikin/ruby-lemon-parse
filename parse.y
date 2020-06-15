@@ -277,8 +277,7 @@ append_gen(ParserState *p, Node *a, Node *b)
   static Node*
   new_sym(ParserState *p, const char *s)
   {
-    Node* result = list2(atom(ATOM_symbol_literal), literal(s));
-    return result;
+    return list2(atom(ATOM_symbol_literal), literal(s));
   }
 
   /* (:call a b c) */
@@ -421,6 +420,18 @@ append_gen(ParserState *p, Node *a, Node *b)
   new_hash(ParserState *p, Node *a)
   {
     return list2(atom(ATOM_hash), a);
+  }
+
+  static Node*
+  new_str(ParserState *p, Node *a)
+  {
+    return list2(atom(ATOM_str), literal(a));
+  }
+
+  static Node*
+  concat_string(ParserState *p, Node *a, Node* b)
+  {
+    return a;
   }
 }
 
@@ -604,11 +615,7 @@ word_list(A) ::= word(B).
   { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), B); }
 word_list(A) ::= word_list(B) opt_sep word(C).
   { A = list3(atom(ATOM_args_add), B, C); }
-word(A) ::= STRING(B).
-  { A = list2(atom(ATOM_string_literal),
-              list3(atom(ATOM_string_add),
-                    list1(atom(ATOM_string_content)),
-                    list2(atom(ATOM_at_tstring_content), literal(B)))); }
+word(A) ::= STRING(B). { A = new_str(p, B); }
 
 symbols(A) ::= SYMBOLS_BEG opt_sep symbol_list(B) STRING_END.
   { A = new_array(p, B); }
@@ -617,7 +624,7 @@ symbol_list(A) ::= symbol_word(B).
 symbol_list(A) ::= symbol_list(B) opt_sep symbol_word(C).
   { A = list3(atom(ATOM_args_add), B, C); }
 symbol_word(A) ::= STRING(B).
-  { A = list2(atom(ATOM_symbol_literal), literal(B)); }
+  { A = new_sym(p, B); }
 
 opt_sep ::= none.
 opt_sep ::= WORDS_SEP.
@@ -644,7 +651,9 @@ fname ::= CONSTANT.
 fname ::= FID.
 
 string ::= string_fragment.
-//string ::= string string_fragment. { A = concat_string(p, B, C); }
+string(A) ::= string(B) string_fragment(C). { A = concat_string(p, B, C); }
+string_fragment(A) ::= STRING_BEG STRING(B) STRING_END. { A = new_str(p, B); }
+
 string_fragment(A) ::= STRING_BEG string_rep(C) STRING_END. { A = new_dstr(p, list3(atom(ATOM_string_add), list1(atom(ATOM_string_content)), C)); }
 
 string_rep ::= string_interp.

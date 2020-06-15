@@ -24,6 +24,7 @@ typedef enum atom_type {
   ATOM_at_op,
   ATOM_var_field,
   ATOM_var_ref,
+  ATOM_str,
   ATOM_string_add,
   ATOM_string_content,
   ATOM_args_new,
