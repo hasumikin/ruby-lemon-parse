@@ -425,7 +425,11 @@ append_gen(ParserState *p, Node *a, Node *b)
   static Node*
   new_str(ParserState *p, Node *a)
   {
-    return list2(atom(ATOM_str), literal(a));
+    if (!a) {
+      return list2(atom(ATOM_str), literal(""));
+    } else {
+      return list2(atom(ATOM_str), literal(a));
+    }
   }
 
   static Node*
@@ -653,6 +657,7 @@ fname ::= FID.
 string ::= string_fragment.
 string(A) ::= string(B) string_fragment(C). { A = concat_string(p, B, C); }
 string_fragment(A) ::= STRING_BEG STRING(B) STRING_END. { A = new_str(p, B); }
+string_fragment(A) ::= STRING_BEG STRING_END. { A = new_str(p, 0); }
 
 string_fragment(A) ::= STRING_BEG string_rep(C) STRING_END. { A = new_dstr(p, list3(atom(ATOM_string_add), list1(atom(ATOM_string_content)), C)); }
 
