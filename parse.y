@@ -351,7 +351,24 @@
   static Node*
   concat_string(ParserState *p, Node *a, Node* b)
   {
-    return a;
+    /* "str" "str" */
+    if (Node_atomType(a) == ATOM_str && Node_atomType(b) == ATOM_str) {
+      char *a_value = a->cons.cdr->cons.car->value.name;
+      size_t a_len = strlen(a_value);
+      char *b_value = b->cons.cdr->cons.car->value.name;
+      size_t b_len = strlen(b_value);
+      char *new_value = LEMON_ALLOC(a_len + b_len + 1);
+      memcpy(new_value, a_value, a_len);
+      memcpy(new_value + a_len, b_value, b_len);
+      new_value[a_len + b_len] = '\0';
+      a->cons.cdr->cons.car = literal(new_value);
+      freeNode(a->cons.cdr->cons.car);
+      freeNode(b);
+      LEMON_FREE(new_value);
+      return a;
+    } else {
+      fprintf(stderr, "This doesn't work yet");
+    }
   }
 }
 
