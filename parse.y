@@ -67,60 +67,6 @@
 
 %include {
   #include "parse_header.h"
-///* parser structure */
-//struct mrb_parser_state {
-//  mrb_state *mrb;
-//  struct mrb_pool *pool;
-//  mrb_ast_node *cells;
-//  const char *s, *send;
-//#ifndef MRB_DISABLE_STDIO
-//  FILE *f;
-//#endif
-//  mrbc_context *cxt;
-//  mrb_sym filename_sym;
-//  uint16_t lineno;
-//  int column;
-//
-//  enum mrb_lex_state_enum lstate;
-//  mrb_ast_node *lex_strterm; /* (type nest_level beg . end) */
-//
-//  unsigned int cond_stack;
-//  unsigned int cmdarg_stack;
-//  int paren_nest;
-//  int lpar_beg;
-//  int in_def, in_single;
-//  mrb_bool cmd_start:1;
-//  mrb_ast_node *locals;
-//
-//  mrb_ast_node *pb;
-//  char *tokbuf;
-//  char buf[MRB_PARSER_TOKBUF_SIZE];
-//  int tidx;
-//  int tsiz;
-//
-//  mrb_ast_node *all_heredocs; /* list of mrb_parser_heredoc_info* */
-//  mrb_ast_node *heredocs_from_nextline;
-//  mrb_ast_node *parsing_heredoc;
-//  mrb_ast_node *lex_strterm_before_heredoc;
-//
-//  void *ylval;
-//
-//  size_t nerr;
-//  size_t nwarn;
-//  mrb_ast_node *tree;
-//
-//  mrb_bool no_optimize:1;
-//  mrb_bool on_eval:1;
-//  mrb_bool capture_errors:1;
-//  struct mrb_parser_message error_buffer[10];
-//  struct mrb_parser_message warn_buffer[10];
-//
-//  mrb_sym* filename_table;
-//  uint16_t filename_table_length;
-//  uint16_t current_filename_index;
-//
-//  struct mrb_jmpbuf* jmp;
-//};
 
   static char*
   parser_strndup(ParserState *p, const char *s, size_t len)
@@ -145,24 +91,11 @@
   cons_gen(ParserState *p, Node *car, Node *cdr)
   {
     Node *c;
-    //if (p->cells) {
-    //  c = p->cells;
-    //  p->cells = p->cells->cdr;
-    //}
-    //else {
-    //  c = (Node *)parser_palloc(p, sizeof(Node));
     c = (Node *)LEMON_ALLOC(sizeof(Node));
     if (c == NULL) printf("Out Of Memory");
     c->type = CONS;
-    //}
     c->cons.car = car;
     c->cons.cdr = cdr;
-    //c->lineno = p->lineno;
-    //c->filename_index = p->current_filename_index;
-    /* beginning of next partial file; need to point the previous file */
-    //if (p->lineno == 0 && p->current_filename_index > 0) {
-    //  c->filename_index-- ;
-    //}
     return c;
   }
   #define cons(a,b) cons_gen(p,(a),(b))
@@ -197,75 +130,58 @@
   }
   #define list1(a) list1_gen(p, (a))
 
-static Node*
-list2_gen(ParserState *p, Node *a, Node *b)
-{
-  return cons(a, cons(b,0));
-}
-#define list2(a,b) list2_gen(p, (a),(b))
-
-static Node*
-list3_gen(ParserState *p, Node *a, Node *b, Node *c)
-{
-  return cons(a, cons(b, cons(c,0)));
-}
-#define list3(a,b,c) list3_gen(p, (a),(b),(c))
-
-static Node*
-list4_gen(ParserState *p, Node *a, Node *b, Node *c, Node *d)
-{
-  return cons(a, cons(b, cons(c, cons(d, 0))));
-}
-#define list4(a,b,c,d) list4_gen(p, (a),(b),(c),(d))
-
-static Node*
-list5_gen(ParserState *p, Node *a, Node *b, Node *c, Node *d, Node *e)
-{
-  return cons(a, cons(b, cons(c, cons(d, cons(e, 0)))));
-}
-#define list5(a,b,c,d,e) list5_gen(p, (a),(b),(c),(d),(e))
-
-static Node*
-list6_gen(ParserState *p, Node *a, Node *b, Node *c, Node *d, Node *e, Node *f)
-{
-  return cons(a, cons(b, cons(c, cons(d, cons(e, cons(f, 0))))));
-}
-#define list6(a,b,c,d,e,f) list6_gen(p, (a),(b),(c),(d),(e),(f))
-
-static Node*
-append_gen(ParserState *p, Node *a, Node *b)
-{
-  Node *c = a;
-  if (!a) return b;
-  if (!b) return a;
-  while (c->cons.cdr) {
-    c = c->cons.cdr;
+  static Node*
+  list2_gen(ParserState *p, Node *a, Node *b)
+  {
+    return cons(a, cons(b,0));
   }
-  c->cons.cdr = b;
-  return a;
-}
-#define append(a,b) append_gen(p,(a),(b))
-#define push(a,b) append_gen(p,(a),list1(b))
+  #define list2(a,b) list2_gen(p, (a),(b))
+
+  static Node*
+  list3_gen(ParserState *p, Node *a, Node *b, Node *c)
+  {
+    return cons(a, cons(b, cons(c,0)));
+  }
+  #define list3(a,b,c) list3_gen(p, (a),(b),(c))
+
+  static Node*
+  list4_gen(ParserState *p, Node *a, Node *b, Node *c, Node *d)
+  {
+    return cons(a, cons(b, cons(c, cons(d, 0))));
+  }
+  #define list4(a,b,c,d) list4_gen(p, (a),(b),(c),(d))
+
+  static Node*
+  list5_gen(ParserState *p, Node *a, Node *b, Node *c, Node *d, Node *e)
+  {
+    return cons(a, cons(b, cons(c, cons(d, cons(e, 0)))));
+  }
+  #define list5(a,b,c,d,e) list5_gen(p, (a),(b),(c),(d),(e))
+
+  static Node*
+  list6_gen(ParserState *p, Node *a, Node *b, Node *c, Node *d, Node *e, Node *f)
+  {
+    return cons(a, cons(b, cons(c, cons(d, cons(e, cons(f, 0))))));
+  }
+  #define list6(a,b,c,d,e,f) list6_gen(p, (a),(b),(c),(d),(e),(f))
+
+  static Node*
+  append_gen(ParserState *p, Node *a, Node *b)
+  {
+    Node *c = a;
+    if (!a) return b;
+    if (!b) return a;
+    while (c->cons.cdr) {
+      c = c->cons.cdr;
+    }
+    c->cons.cdr = b;
+    return a;
+  }
+  #define append(a,b) append_gen(p,(a),(b))
+  #define push(a,b) append_gen(p,(a),list1(b))
 
   #define nsym(x) ((Node*)(intptr_t)(x))
   #define nint(x) ((Node*)(intptr_t)(x))
-
-/*
-  static Node*
-  locals_Node(ParserState *p)
-  {
-    //return p->locals->cons.car;
-    //return p->locals ? p->locals->cons.car : NULL;
-  }
-*/
-  /* (:scope (vars..) (prog...)) */
-/*
-  static Node*
-  new_scope(ParserState *p, Node *body)
-  {
-    return cons(atom(ATOM_stmts_add), cons(locals_node(p), body));
-  }
-*/
 
   static Node*
   new_return(ParserState *p, Node *array)
@@ -444,12 +360,14 @@ append_gen(ParserState *p, Node *a, Node *b)
   printf("Parse has completed successfully.\n");
 #endif
 }
+
 %syntax_error {
 #ifndef NDEBUG
   fprintf(stderr, "Syntax error\n");
 #endif
   p->error_count++;
 }
+
 %parse_failure {
 #ifndef NDEBUG
   fprintf(stderr, "Parse failure\n");
@@ -476,12 +394,14 @@ append_gen(ParserState *p, Node *a, Node *b)
 %right UNEG UNOT UPLUS.
 
 program ::= top_compstmt(B). { yypParser->p->root = list2(atom(ATOM_program), B); }
+
 top_compstmt(A) ::= top_stmts(B) opt_terms. { A = B; }
+
 top_stmts(A) ::= none. { A = new_begin(p, 0); }
 top_stmts(A) ::= top_stmt(B). { A = new_begin(p, B); }
-top_stmts(A) ::= top_stmts(B) terms top_stmt(C). {
-  A = list3(atom(ATOM_stmts_add), B, newline_node(C));
-  }
+top_stmts(A) ::= top_stmts(B) terms top_stmt(C).
+  { A = list3(atom(ATOM_stmts_add), B, newline_node(C)); }
+
 top_stmt ::= stmt.
 
 compstmt(A) ::= stmt(B) opt_terms. { A = B; }
@@ -494,7 +414,7 @@ stmt ::= expr.
 //command_asgn(A) ::= primary_value(B) LBRACKET opt_call_args(C) RBRACKET OP_ASGN(D) command_rhs(E).
 //  { A = new_op_asgn(p, new_call(p, B, "[]", C, '.'), D, E); }
 //
-//command_rhs ::= command_call.
+//command_rhs ::= command_call. [OP_ASGN]
 //command_rhs ::= command_asgn.
 
 expr ::= command_call.
@@ -503,7 +423,8 @@ expr ::= arg.
 command_call ::= command.
 
 command(A) ::= operation(B) command_args(C). [LOWEST] { A = new_fcall(p, B, C); }
-command(A) ::= primary_value(B) call_op(C) operation2(D) command_args(E). { A = new_call(p, B, D, E, C); }
+command(A) ::= primary_value(B) call_op(C) operation2(D) command_args(E).
+  { A = new_call(p, B, D, E, C); }
 command(A) ::= KW_return call_args(B). { A = new_return(p, ret_args(p, B)); }
 
 command_args ::= call_args.
@@ -550,7 +471,7 @@ arg(A) ::= arg(B) LSHIFT arg(C). { A = call_bin_op(B, "<<", C); }
 arg(A) ::= arg(B) RSHIFT arg(C). { A = call_bin_op(B, ">>", C); }
 arg ::= primary.
 
-arg_rhs ::= arg.
+arg_rhs ::= arg. [OP_ASGN]
 
 lhs ::= variable.
 lhs(A) ::= primary_value(B) LBRACKET opt_call_args(C) RBRACKET.
@@ -595,8 +516,10 @@ trailer ::= terms.
 trailer ::= COMMA.
 
 method_call(A) ::= operation(B) paren_args(C). { A = new_fcall(p, B, C); }
-method_call(A) ::= primary_value(B) call_op(C) operation2(D) opt_paren_args(E). { A = new_call(p, B, D, E, C); }
-method_call(A) ::= primary_value(B) LBRACKET opt_call_args(C) RBRACKET. { A = new_call(p, B, "[]", C, '.'); }
+method_call(A) ::= primary_value(B) call_op(C) operation2(D) opt_paren_args(E).
+  { A = new_call(p, B, D, E, C); }
+method_call(A) ::= primary_value(B) LBRACKET opt_call_args(C) RBRACKET.
+  { A = new_call(p, B, "[]", C, '.'); }
 
 call_op(A) ::= PERIOD(B). { A = B; }
 
@@ -641,8 +564,8 @@ var_ref(A) ::= KW_false. { A = list1(atom(ATOM_kw_false)); }
 
 numeric(A) ::= INTEGER(B). { A = new_lit(p, B, ATOM_at_int); }
 numeric(A) ::= FLOAT(B).   { A = new_lit(p, B, ATOM_at_float); }
-numeric(A) ::= UMINUS_NUM INTEGER(B). { A = new_neglit(p, B, ATOM_at_int); }
-numeric(A) ::= UMINUS_NUM FLOAT(B).   { A = new_neglit(p, B, ATOM_at_float); }
+numeric(A) ::= UMINUS_NUM INTEGER(B). [LOWEST] { A = new_neglit(p, B, ATOM_at_int); }
+numeric(A) ::= UMINUS_NUM FLOAT(B). [LOWEST]   { A = new_neglit(p, B, ATOM_at_float); }
 
 symbol(A) ::= basic_symbol(B). { A = new_sym(p, B); }
 
@@ -659,7 +582,8 @@ string(A) ::= string(B) string_fragment(C). { A = concat_string(p, B, C); }
 string_fragment(A) ::= STRING_BEG STRING(B) STRING_END. { A = new_str(p, B); }
 string_fragment(A) ::= STRING_BEG STRING_END. { A = new_str(p, 0); }
 
-string_fragment(A) ::= STRING_BEG string_rep(C) STRING_END. { A = new_dstr(p, list3(atom(ATOM_string_add), list1(atom(ATOM_string_content)), C)); }
+string_fragment(A) ::= STRING_BEG string_rep(C) STRING_END.
+  { A = new_dstr(p, list3(atom(ATOM_string_add), list1(atom(ATOM_string_content)), C)); }
 
 string_rep ::= string_interp.
 string_rep(A) ::= string_rep(B) string_interp(C). { A = append(B, C); }
