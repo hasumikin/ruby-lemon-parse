@@ -9,8 +9,9 @@
   EMBDOC
   EMBDOC_BEG
   EMBDOC_END
-  EMBEXPR_BEG
-  EMBEXPR_END
+  DSTRING_BEG
+  DSTRING_END
+  STRING_END
   IVAR
   GVAR
   CHAR
@@ -361,8 +362,8 @@
       memcpy(new_value, a_value, a_len);
       memcpy(new_value + a_len, b_value, b_len);
       new_value[a_len + b_len] = '\0';
-      a->cons.cdr->cons.car = literal(new_value);
       freeNode(a->cons.cdr->cons.car);
+      a->cons.cdr->cons.car = literal(new_value);
       freeNode(b);
       LEMON_FREE(new_value);
       return a;
@@ -553,7 +554,7 @@ literal ::= symbol.
 literal ::= words.
 literal ::= symbols.
 
-words(A) ::= WORDS_BEG opt_sep word_list(B) STRING_END.
+words(A) ::= WORDS_BEG opt_sep word_list(B).
   { A = new_array(p, B); }
 word_list(A) ::= word(B).
   { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), B); }
@@ -561,7 +562,7 @@ word_list(A) ::= word_list(B) opt_sep word(C).
   { A = list3(atom(ATOM_args_add), B, C); }
 word(A) ::= STRING(B). { A = new_str(p, B); }
 
-symbols(A) ::= SYMBOLS_BEG opt_sep symbol_list(B) STRING_END.
+symbols(A) ::= SYMBOLS_BEG opt_sep symbol_list(B).
   { A = new_array(p, B); }
 symbol_list(A) ::= symbol_word(B).
   { A = list3(atom(ATOM_args_add), list1(atom(ATOM_args_new)), B); }
@@ -596,16 +597,19 @@ fname ::= FID.
 
 string ::= string_fragment.
 string(A) ::= string(B) string_fragment(C). { A = concat_string(p, B, C); }
-string_fragment(A) ::= STRING_BEG STRING(B) STRING_END. { A = new_str(p, B); }
-string_fragment(A) ::= STRING_BEG STRING_END. { A = new_str(p, 0); }
 
-string_fragment(A) ::= STRING_BEG string_rep(C) STRING_END.
-  { A = new_dstr(p, list3(atom(ATOM_string_add), list1(atom(ATOM_string_content)), C)); }
+string_fragment ::= STRING.
+string_fragment(A) ::= STRING_BEG STRING(B). { A = new_str(p, B); }
+string_fragment(A) ::= STRING_BEG string_rep(B) STRING(C). { A = list2(B, new_str(C)); }
+string_fragment(A) ::= STRING_BEG . { A = new_str(p, ""); }
 
-string_rep ::= string_interp.
-string_rep(A) ::= string_rep(B) string_interp(C). { A = append(B, C); }
+string_rep(A) ::= DSTRING_BEG compst
 
-string_interp(A) ::= STRING(B). { A = list2(atom(ATOM_at_tstring_content), literal(B)); }
+//string_rep ::= string_interp.
+//string_rep(A) ::= string_rep(B) string_interp(C). { A = append(B, C); }
+//
+//string_interp(A) ::= DSTRING_BEG compstmt(B) DSTRING_END.
+//  { A = list1(B); }
 
 operation(A) ::= IDENTIFIER(B). { A = list2(atom(ATOM_at_ident), literal(B)); }
 operation ::= CONSTANT.
