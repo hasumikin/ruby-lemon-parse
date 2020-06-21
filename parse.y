@@ -209,17 +209,10 @@
   new_begin(ParserState *p, Node *body)
   {
     if (body) {
-      Node *add;//, *new;
-      //add = list1(atom(":stmts_add"));
-      //new = list2(atom(":stmts_new"), body);
-      //add->cons.cdr = new;
-      add = list3(atom(ATOM_stmts_add), list1(atom(ATOM_stmts_new)), body);
-      return add;
+      return list3(atom(ATOM_stmts_add), list1(atom(ATOM_stmts_new)), body);
     }
     return cons(atom(ATOM_stmts_new), 0);//TODO ここおかしい
   }
-
-  #define newline_node(n) (n)
 
   static Node*
   call_bin_op_gen(ParserState *p, Node *recv, const char *op, Node *arg)
@@ -315,7 +308,7 @@
   static Node*
   new_dstr(ParserState *p, Node *a)
   {
-    return list2(atom(ATOM_string_literal), a);
+    return list2(atom(ATOM_dstr), a);
   }
 
   static Node*
@@ -368,7 +361,7 @@
       LEMON_FREE(new_value);
       return a;
     } else {
-      fprintf(stderr, "This doesn't work yet");
+      fprintf(stderr, "concat_string(); This doesn't work yet\n");
     }
   }
 }
@@ -418,11 +411,16 @@ top_compstmt(A) ::= top_stmts(B) opt_terms. { A = B; }
 top_stmts(A) ::= none. { A = new_begin(p, 0); }
 top_stmts(A) ::= top_stmt(B). { A = new_begin(p, B); }
 top_stmts(A) ::= top_stmts(B) terms top_stmt(C).
-  { A = list3(atom(ATOM_stmts_add), B, newline_node(C)); }
+  { A = list3(atom(ATOM_stmts_add), B, C); }
 
 top_stmt ::= stmt.
 
-compstmt(A) ::= stmt(B) opt_terms. { A = B; }
+compstmt(A) ::= stmts(B) opt_terms. { A = B; }
+
+stmts(A) ::= none. { A = new_begin(p, 0); }
+stmts(A) ::= stmt(B). { A = new_begin(p, B); }
+
+stmt(A) ::= none. { A = new_begin(p, 0); }
 
 stmt ::= expr.
 //stmt ::= command_asgn.
@@ -598,18 +596,19 @@ fname ::= FID.
 string ::= string_fragment.
 string(A) ::= string(B) string_fragment(C). { A = concat_string(p, B, C); }
 
-string_fragment ::= STRING.
+string_fragment(A) ::= STRING(B). { A = new_str(p, B); }
 string_fragment(A) ::= STRING_BEG STRING(B). { A = new_str(p, B); }
-string_fragment(A) ::= STRING_BEG string_rep(B) STRING(C). { A = list2(B, new_str(C)); }
-string_fragment(A) ::= STRING_BEG . { A = new_str(p, ""); }
+string_fragment(A) ::= STRING_BEG string_rep(B) STRING(C).
+  { A = new_dstr(p, list3(atom(ATOM_dstr_add), B, new_str(p, C))); }
 
-string_rep(A) ::= DSTRING_BEG compst
+string_rep ::= string_interp.
+string_rep(A) ::= string_rep(B) string_interp(C).
+  { A = list3(atom(ATOM_dstr_add), B, C); }
 
-//string_rep ::= string_interp.
-//string_rep(A) ::= string_rep(B) string_interp(C). { A = append(B, C); }
-//
-//string_interp(A) ::= DSTRING_BEG compstmt(B) DSTRING_END.
-//  { A = list1(B); }
+string_interp(A) ::= DSTRING_TOP(B). { A = list3(atom(ATOM_dstr_add), list1(atom(ATOM_dstr_new)), new_str(p, B)); }
+string_interp(A) ::= DSTRING_MID(B). { A = new_str(p, B); }
+string_interp(A) ::= DSTRING_BEG compstmt(B) DSTRING_END.
+  { A = B; }
 
 operation(A) ::= IDENTIFIER(B). { A = list2(atom(ATOM_at_ident), literal(B)); }
 operation ::= CONSTANT.
