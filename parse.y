@@ -343,26 +343,51 @@
   }
 
   static Node*
+  unite_str(ParserState *p, Node *a, Node* b) {
+    char *a_value = a->value.name;
+    size_t a_len = strlen(a_value);
+    char *b_value = b->value.name;
+    size_t b_len = strlen(b_value);
+    char *new_value = LEMON_ALLOC(a_len + b_len + 1);
+    memcpy(new_value, a_value, a_len);
+    memcpy(new_value + a_len, b_value, b_len);
+    new_value[a_len + b_len] = '\0';
+    Node *n = literal(new_value);
+    LEMON_FREE(new_value);
+    return n;
+  }
+
+  static Node*
   concat_string(ParserState *p, Node *a, Node* b)
   {
-    /* "str" "str" */
-    if (Node_atomType(a) == ATOM_str && Node_atomType(b) == ATOM_str) {
-      char *a_value = a->cons.cdr->cons.car->value.name;
-      size_t a_len = strlen(a_value);
-      char *b_value = b->cons.cdr->cons.car->value.name;
-      size_t b_len = strlen(b_value);
-      char *new_value = LEMON_ALLOC(a_len + b_len + 1);
-      memcpy(new_value, a_value, a_len);
-      memcpy(new_value + a_len, b_value, b_len);
-      new_value[a_len + b_len] = '\0';
-      freeNode(a->cons.cdr->cons.car);
-      a->cons.cdr->cons.car = literal(new_value);
-      freeNode(b);
-      LEMON_FREE(new_value);
-      return a;
+    if (Node_atomType(a) == ATOM_str) {
+      if (Node_atomType(b) == ATOM_str) { /* "str" "str" */
+        Node *new_str_value = unite_str(p, a->cons.cdr->cons.car, b->cons.cdr->cons.car);
+        freeNode(a->cons.cdr->cons.car);
+        a->cons.cdr->cons.car = new_str_value;
+        freeNode(b);
+        return a;
+      } else { /* "str" "dstr" */
+        Node *n = b->cons.cdr->cons.car;
+        while (Node_atomType(n->cons.cdr->cons.car) != ATOM_dstr_new) {
+          n = n->cons.cdr->cons.car;
+        }
+        Node *new_str_value = unite_str(p, a->cons.cdr->cons.car, n->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car);
+        freeNode(n->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car);
+        n->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car = new_str_value;
+        freeNode(a);
+        return b;
+      }
     } else {
-      fprintf(stderr, "concat_string(); This doesn't work yet\n");
+      if (Node_atomType(b) == ATOM_str) { /* "dstr" "str" */
+        fprintf(stderr, "concat_string(); This doesn't work yet\n");
+        return NULL;
+      } else { /* "dstr" "dstr" */
+        fprintf(stderr, "concat_string(); This doesn't work yet\n");
+        return NULL;
+      }
     }
+    fprintf(stderr, "concat_string(); This should not happen\n");
   }
 }
 
