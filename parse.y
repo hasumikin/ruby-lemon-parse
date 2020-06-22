@@ -360,9 +360,10 @@
   static Node*
   concat_string(ParserState *p, Node *a, Node* b)
   {
+    Node *new_str_value;
     if (Node_atomType(a) == ATOM_str) {
       if (Node_atomType(b) == ATOM_str) { /* "str" "str" */
-        Node *new_str_value = unite_str(p, a->cons.cdr->cons.car, b->cons.cdr->cons.car);
+        new_str_value = unite_str(p, a->cons.cdr->cons.car, b->cons.cdr->cons.car);
         freeNode(a->cons.cdr->cons.car);
         a->cons.cdr->cons.car = new_str_value;
         freeNode(b);
@@ -372,7 +373,7 @@
         while (Node_atomType(n->cons.cdr->cons.car) != ATOM_dstr_new) {
           n = n->cons.cdr->cons.car;
         }
-        Node *new_str_value = unite_str(p, a->cons.cdr->cons.car, n->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car);
+        new_str_value = unite_str(p, a->cons.cdr->cons.car, n->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car);
         freeNode(n->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car);
         n->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car = new_str_value;
         freeNode(a);
@@ -380,11 +381,45 @@
       }
     } else {
       if (Node_atomType(b) == ATOM_str) { /* "dstr" "str" */
-        fprintf(stderr, "concat_string(); This doesn't work yet\n");
-        return NULL;
-      } else { /* "dstr" "dstr" */
-        fprintf(stderr, "concat_string(); This doesn't work yet\n");
-        return NULL;
+        Node *a2 = a->cons.cdr->cons.car->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car;
+        new_str_value = unite_str(p, a2, b->cons.cdr->cons.car);
+        freeNode(a2);
+        a->cons.cdr->cons.car->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car = new_str_value;
+        freeNode(b);
+        return a;
+      } else { /* "dstr_a" "dstr_b" ...ex) `"w#{1}x" "y#{2}z"`*/
+        Node *a2, *b2;
+        { /* unite the last str of dstr_a and the first str of dstr_b ...ex) "x" "y" */
+          a2 = a->cons.cdr->cons.car->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car;
+          b2 = b->cons.cdr->cons.car;
+          while (Node_atomType(b2->cons.cdr->cons.car) != ATOM_dstr_new) {
+            b2 = b2->cons.cdr->cons.car;
+          }
+          new_str_value = unite_str(p, a2, b2->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car);
+          a->cons.cdr->cons.car->cons.cdr->cons.cdr->cons.car->cons.cdr->cons.car = new_str_value;
+          freeNode(a2); /* remove original str of a2 ...ex) `"x"`*/
+          b2 = b2->cons.cdr->cons.cdr->cons.car;
+        }
+        Node *orig_a = a->cons.cdr->cons.car; /* copy to reuse it later */
+        { /* replace dstr_a tree with dstr_b tree */
+          a->cons.cdr->cons.car = b->cons.cdr->cons.car;
+        }
+        { /* insert original dstr_a tree into the bottom of new dstr tree*/
+          a2 = a->cons.cdr->cons.car;
+          while (Node_atomType(a2->cons.cdr->cons.car->cons.cdr->cons.car) != ATOM_dstr_new) {
+            a2 = a2->cons.cdr->cons.car;
+          }
+          freeNode(a2->cons.cdr->cons.car); /* remove [ATOM_dstr_new] of new dstr tree */
+          a2->cons.cdr->cons.car = orig_a;  /* insert original dstr_a */
+        }
+        { /* remove the top node `[ATOM_dstr, [` of dstr_bi
+           * You can't use freeNode() because b's grand children are still necessary
+           */
+          LEMON_FREE(b->cons.cdr);
+          LEMON_FREE(b->cons.car);
+          LEMON_FREE(b);
+        }
+        return a;
       }
     }
     fprintf(stderr, "concat_string(); This should not happen\n");
