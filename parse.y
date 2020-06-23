@@ -479,10 +479,9 @@ compstmt(A) ::= stmts(B) opt_terms. { A = B; }
 
 stmts(A) ::= none. { A = new_begin(p, 0); }
 stmts(A) ::= stmt(B). { A = new_begin(p, B); }
+stmts(A) ::= stmts(B) terms stmt(C). { A = list3(atom(ATOM_stmts_add), B, C); }
 
 stmt(A) ::= none. { A = new_begin(p, 0); }
-
-stmt ::= expr.
 //stmt ::= command_asgn.
 //
 //command_asgn(A) ::= lhs(B) E command_rhs(C). { A = new_asgn(p, B, C); }
@@ -492,6 +491,7 @@ stmt ::= expr.
 //
 //command_rhs ::= command_call. [OP_ASGN]
 //command_rhs ::= command_asgn.
+stmt ::= expr.
 
 expr ::= command_call.
 expr ::= arg.
